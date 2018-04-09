@@ -14,15 +14,13 @@ import glfw                         # lean window system wrapper for OpenGL
 from transform import Trackball, identity
 
 
-
-from transform import (lerp, vec, quaternion_slerp, quaternion_matrix,
-                        quaternion, quaternion_from_euler)
-
 from model_loading import load
 from shaders import load_shaders
 
-from renderable import Cylinder
+from renderable import Ground
 from animation import KeyFrameControlNode
+
+from renderable import GroundCylinder # debuging
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -129,13 +127,12 @@ def main():
     """ create a window, add scene objects, then run rendering loop """
     viewer = Viewer()
 
-    translate_keys = {0: vec(0, 0, 0), 2: vec(1, 1, 0), 4: vec(0, 0, 0)}
-    rotate_keys = {0: quaternion(), 2: quaternion_from_euler(180, 45, 90),
-                   3: quaternion_from_euler(180, 0, 180), 4: quaternion()}
-    scale_keys = {0: vec(1, 1, 1), 2: vec(1, 3, 1), 4: vec(1, 1, 1)}
-    keynode = KeyFrameControlNode(translate_keys, rotate_keys, scale_keys)
-    keynode.add(Cylinder())
-    viewer.add(keynode)
+    ground = Ground("assets/heightmap.pgm")
+
+    viewer.add(ground)
+
+    # cylinder on the ground at 0, 0
+    viewer.add(GroundCylinder(ground))
 
     # place instances of our basic objects
     #viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
