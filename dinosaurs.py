@@ -10,15 +10,19 @@ import sys
 # External, non built-in modules
 import OpenGL.GL as GL              # standard Python OpenGL wrapper
 import glfw                         # lean window system wrapper for OpenGL
-#import numpy as np                  # all matrix manipulations & OpenGL args
-import pyassimp                     # 3D ressource loader
-import pyassimp.errors              # assimp error management + exceptions
 
-# from transform import Trackball, identity, translate, scale, rotate
 from transform import Trackball, identity
+
+
+
+from transform import (lerp, vec, quaternion_slerp, quaternion_matrix,
+                        quaternion, quaternion_from_euler)
 
 from model_loading import load
 from shaders import load_shaders
+
+from renderable import Cylinder
+from animation import KeyFrameControlNode
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -115,6 +119,8 @@ class Viewer:
         if action == glfw.PRESS or action == glfw.REPEAT:
             if key == glfw.KEY_ESCAPE or key == glfw.KEY_Q:
                 glfw.set_window_should_close(self.win, True)
+            if key == glfw.KEY_SPACE:
+                glfw.set_time(0)
             if key == glfw.KEY_W:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
 
@@ -123,11 +129,19 @@ def main():
     """ create a window, add scene objects, then run rendering loop """
     viewer = Viewer()
 
+    translate_keys = {0: vec(0, 0, 0), 2: vec(1, 1, 0), 4: vec(0, 0, 0)}
+    rotate_keys = {0: quaternion(), 2: quaternion_from_euler(180, 45, 90),
+                   3: quaternion_from_euler(180, 0, 180), 4: quaternion()}
+    scale_keys = {0: vec(1, 1, 1), 2: vec(1, 3, 1), 4: vec(1, 1, 1)}
+    keynode = KeyFrameControlNode(translate_keys, rotate_keys, scale_keys)
+    keynode.add(Cylinder())
+    viewer.add(keynode)
+
     # place instances of our basic objects
-    viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
-    if len(sys.argv) < 2:
-        print('Usage:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
-              ' format supported by pyassimp.' % (sys.argv[0],))
+    #viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
+    #if len(sys.argv) < 2:
+    #    print('Usage:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
+    #          ' format supported by pyassimp.' % (sys.argv[0],))
 
     # start rendering loop
     viewer.run()
