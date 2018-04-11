@@ -13,8 +13,7 @@ import numpy as np                  # all matrix manipulations & OpenGL args
 import pyassimp                     # 3D ressource loader
 import pyassimp.errors              # assimp error management + exceptions
 
-# from transform import Trackball, identity, translate, scale, rotate
-from transform import *
+from transform import identity
 
 class VertexArray:
     """helper class to create and self destroy vertex array objects."""
@@ -114,6 +113,7 @@ class Node:
     def add(self, *drawables):
         """ Add drawables to this node, simply updating children list """
         self.children.extend(drawables)
+        return self
 
     def draw(self, projection, view, model, **param):
         """ Recursive draw, passing down named parameters & model matrix. """

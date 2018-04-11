@@ -14,13 +14,12 @@ import glfw                         # lean window system wrapper for OpenGL
 from transform import Trackball, identity
 
 
-from model_loading import load
+from model_loading import load, Node
 from shaders import load_shaders
 
-from renderable import Ground
+from renderable import Ground, GroundedNode
 from animation import KeyFrameControlNode
-
-from renderable import GroundCylinder # debuging
+from keyboard_control import KeyboardControlNode
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -46,10 +45,11 @@ class GLFWTrackball(Trackball):
         """ Scroll controls the camera distance to trackball center """
         self.zoom(deltay, glfw.get_window_size(win)[1])
 
-class Viewer:
+class Viewer(Node):
     """ GLFW viewer window, with classic initialization & graphics loop """
 
     def __init__(self, width=640, height=480):
+        super().__init__("Scene")
 
         # version hints: create GL window with >= OpenGL 3.3 and core profile
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -78,9 +78,6 @@ class Viewer:
         # compile and initialize shader programs once globally
         self.color_shaders = load_shaders()
 
-        # initially empty list of object to draw
-        self.drawables = []
-
         # initialize trackball
         self.trackball = GLFWTrackball(self.win)
 
@@ -98,19 +95,13 @@ class Viewer:
             projection = self.trackball.projection_matrix(winsize)
 
             """ draw our scene objects """
-            for drawable in self.drawables:
-                drawable.draw(projection, view, identity(),
-                              color_shader=self.color_shaders['simple'])
+            self.draw(projection, view, identity(), win=self.win, color_shader=self.color_shaders['simple'])
 
             # flush render commands, and swap draw buffers
             glfw.swap_buffers(self.win)
 
             # Poll for and process events
             glfw.poll_events()
-
-    def add(self, *drawables):
-        """ add objects to draw in this window """
-        self.drawables.extend(drawables)
 
     def on_key(self, _win, key, _scancode, action, _mods):
         """ 'Q' or 'Escape' quits """
@@ -131,12 +122,16 @@ def main():
 
     viewer.add(ground)
 
-    # cylinder on the ground at 0, 0
-    viewer.add(GroundCylinder(ground))
-    viewer.add(GroundCylinder(ground, x=-10, z=-10))
-    viewer.add(GroundCylinder(ground, x=10, z=-10))
-    viewer.add(GroundCylinder(ground, x=-10, z=10))
-    viewer.add(GroundCylinder(ground, x=10, z=10))
+    # moving cylinder on the ground at 0, 0 (debuging)
+    grounded_cylinder = GroundedNode(ground).add(*load("assets/cylinder.obj"))
+    moving_cylinder = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
+    moving_cylinder.add(grounded_cylinder)
+    viewer.add(moving_cylinder)
+    # 4 cylinders on the ground (debuging)
+    #viewer.add(GroundedNode(ground, x=-10, z=-10).add(*load("assets/cylinder.obj")))
+    #viewer.add(GroundedNode(ground, x=10, z=-10).add(*load("assets/cylinder.obj")))
+    #viewer.add(GroundedNode(ground, x=-10, z=10).add(*load("assets/cylinder.obj")))
+    #viewer.add(GroundedNode(ground, x=10, z=10).add(*load("assets/cylinder.obj")))
 
     # place instances of our basic objects
     #viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
