@@ -133,6 +133,10 @@ def main():
 
     # cylinder on the ground at 0, 0
     viewer.add(GroundCylinder(ground))
+    viewer.add(GroundCylinder(ground, x=-10, z=-10))
+    viewer.add(GroundCylinder(ground, x=10, z=-10))
+    viewer.add(GroundCylinder(ground, x=-10, z=10))
+    viewer.add(GroundCylinder(ground, x=10, z=10))
 
     # place instances of our basic objects
     #viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
