@@ -60,7 +60,7 @@ class TransformKeyFrames:
 
         for i in range(3):
             for j in range(3):
-                TRS[i][j]=R[i][j]*S[i]
+                TRS[i][j]=R[i][j]*S
 
         return TRS
 
@@ -90,6 +90,6 @@ if __name__ == "__main__":
 
     translate_keys = {0: vec(0, 0, 0), 1: vec(0, 0, 0)}
     rotate_keys = {0: quaternion_from_axis_angle(vec(1, 0, 0), 0), 1: quaternion_from_axis_angle(vec(1, 0, 0), 90)}
-    scale_keys = {0: vec(1, 1, 1), 1: vec(1, 1, 1)}
+    scale_keys = {0: 1, 1: 1}
     transform_keyframes = TransformKeyFrames(translate_keys, rotate_keys, scale_keys)
     print(transform_keyframes.value(0.5))

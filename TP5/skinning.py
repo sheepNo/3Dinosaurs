@@ -15,7 +15,7 @@ import numpy as np                  # all matrix manipulations & OpenGL args
 import pyassimp                     # 3D ressource loader
 import pyassimp.errors              # assimp error management + exceptions
 
-from transform import translate, scale, identity, Trackball, sincos, vec
+from transform import vec, translate, scale, identity, Trackball, sincos
 from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
                        quaternion_from_euler)
 
@@ -159,9 +159,50 @@ class Node:
         for child in self.children:
             child.draw(projection, view, model, **param)
 
+# mesh to refactor all previous classes
+class ColorMesh:
+
+    def __init__(self, attributes, index=None):
+        self.vertex_array = VertexArray(attributes, index)
+
+    def draw(self, projection, view, model, color_shader=None, color=(1, 1, 1, 1), **param):
+
+        names = ['view', 'projection', 'model', 'cam']
+        loc = {n: GL.glGetUniformLocation(color_shader.glid, n) for n in names}
+        GL.glUseProgram(color_shader.glid)
+
+        GL.glUniformMatrix4fv(loc['view'], 1, True, view)
+        GL.glUniform4fv(loc['cam'], 1, True, view[3]) # position of the light
+        GL.glUniformMatrix4fv(loc['projection'], 1, True, projection)
+        GL.glUniformMatrix4fv(loc['model'], 1, True, model)
+
+        # draw triangle as GL_TRIANGLE vertex array, draw array call
+        self.vertex_array.draw(GL.GL_TRIANGLES)
+
+class Cylinder(Node):
+    """ Very simple cylinder based on practical 2 load function """
+    def __init__(self):
+        super().__init__()
+        self.add(*load('cylinder.obj'))  # just load the cylinder from file
+
+# -------------- 3D ressource loader -----------------------------------------
+def load(file):
+    """ load resources from file using pyassimp, return list of ColorMesh """
+    try:
+        option = pyassimp.postprocess.aiProcessPreset_TargetRealtime_MaxQuality
+        scene = pyassimp.load(file, option)
+    except pyassimp.errors.AssimpError:
+        print('ERROR: pyassimp unable to load', file)
+        return []  # error reading => return empty list
+
+    meshes = [ColorMesh([m.vertices, m.normals], m.faces) for m in scene.meshes]
+    size = sum((mesh.faces.shape[0] for mesh in scene.meshes))
+    print('Loaded %s\t(%d meshes, %d faces)' % (file, len(scene.meshes), size))
+
+    pyassimp.release(scene)
+    return meshes
 
 # -------------- Keyframing Utilities TP6 ------------------------------------
-# Basic keyframe interpolation
 class KeyFrames:
     """ Stores keyframe pairs for any value type with interpolation_function"""
     def __init__(self, time_value_pairs, interpolation_function=lerp):
@@ -185,7 +226,7 @@ class KeyFrames:
         # in self.values, using the initially stored self.interpolate function
         return self.interpolate(self.values[index-1], self.values[index], (time-self.times[index-1])/(self.times[index]-self.times[index-1]))
 
-# Transformation interpolation
+
 class TransformKeyFrames:
     """ KeyFrames-like object dedicated to 3D transforms """
     def __init__(self, translate_keys, rotate_keys, scale_keys):
@@ -209,11 +250,11 @@ class TransformKeyFrames:
 
         for i in range(3):
             for j in range(3):
-                TRS[i][j]=R[i][j]*S
+                TRS[i][j]=R[i][j]*S[i]
 
         return TRS
 
-# Node for keyframing animation
+
 class KeyFrameControlNode(Node):
     """ Place node with transform keys above a controlled subtree """
     def __init__(self, trans_keys, rotat_keys, scale_keys, **kwargs):
@@ -252,7 +293,9 @@ out vec3 fragColor;
 void main() {
 
     // ------ creation of the skinning deformation matrix
-    mat4 skinMatrix = mat4(1.);  // TODO complete shader here for exercise 1!
+    for (int i=0; i<4; i++){
+        skinMatrix += mat4(bone_weights[i])*boneMatrix[bone_ids[i]];
+    }  //complete shader here for exercise 1!
 
     // ------ compute world and normalized eye coordinates of our vertex
     vec4 wPosition4 = skinMatrix * vec4(position, 1.0);
@@ -568,21 +611,34 @@ class Viewer:
 
 
 # -------------- main program and scene setup --------------------------------
+# def main():
+#     """ create a window, add scene objects, then run rendering loop """
+#     viewer = Viewer()
+#
+#     if len(sys.argv) < 2:
+#         print('Cylinder skinning demo.')
+#         print('Note:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
+#               ' format supported by pyassimp.' % sys.argv[0])
+#         viewer.add(SkinnedCylinder())
+#     else:
+#         viewer.add(*[m for file in sys.argv[1:] for m in load_skinned(file)])
+#
+#     # start rendering loop
+#     viewer.run()
+
 def main():
-    """ create a window, add scene objects, then run rendering loop """
+    """ main program """
     viewer = Viewer()
 
-    if len(sys.argv) < 2:
-        print('Cylinder skinning demo.')
-        print('Note:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
-              ' format supported by pyassimp.' % sys.argv[0])
-        viewer.add(SkinnedCylinder())
-    else:
-        viewer.add(*[m for file in sys.argv[1:] for m in load_skinned(file)])
+    translate_keys = {0: vec(0, 0, 0), 2: vec(1, 1, 0), 4: vec(0, 0, 0)}
+    rotate_keys = {0: quaternion(), 2: quaternion_from_euler(180, 45, 90),
+                   3: quaternion_from_euler(180, 0, 180), 4: quaternion()}
+    scale_keys = {0: vec(1,1,1), 2: vec(0.5,0.5,0.5), 4: vec(1,1,1)}
+    keynode = KeyFrameControlNode(translate_keys, rotate_keys, scale_keys)
+    keynode.add(Cylinder())
+    viewer.add(keynode)
 
-    # start rendering loop
     viewer.run()
-
 
 if __name__ == '__main__':
     glfw.init()                # initialize window system glfw

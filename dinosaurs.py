@@ -10,8 +10,11 @@ import sys
 # External, non built-in modules
 import OpenGL.GL as GL              # standard Python OpenGL wrapper
 import glfw                         # lean window system wrapper for OpenGL
+import numpy as np
 
-from transform import Trackball, identity
+from transform import vec, translate, scale, identity, Trackball, sincos
+from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
+                       quaternion_from_euler)
 
 
 from model_loading import load, Node
@@ -112,7 +115,7 @@ class Viewer(Node):
                 glfw.set_time(0)
             if key == glfw.KEY_W:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
-
+                
 # -------------- main program and scene setup --------------------------------
 def main():
     """ create a window, add scene objects, then run rendering loop """
@@ -127,6 +130,7 @@ def main():
     moving_cylinder = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
     moving_cylinder.add(grounded_cylinder)
     viewer.add(moving_cylinder)
+
     # 4 cylinders on the ground (debuging)
     #viewer.add(GroundedNode(ground, x=-10, z=-10).add(*load("assets/cylinder.obj")))
     #viewer.add(GroundedNode(ground, x=10, z=-10).add(*load("assets/cylinder.obj")))
