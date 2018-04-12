@@ -216,32 +216,27 @@ class KeyFrames:
         """ Computes interpolated value from keyframes, for a given time """
 
         # 1. ensure time is within bounds else return boundary keyframe
-        # TODO: insert your code from TP6 here
-        if (time < self.times[0] or time > self.times[-1]):
-            return self.times[0], self.times[-1]
-
-        # 2. search for closest index entry in self.times, using bisect_left
-        # TODO: insert your code from TP6 here
+        if time < self.times[0]:
+            return self.values[0]
+        if time > self.times[-1]:
+            return self.values[-1]
+        # 2. search for closest index entry in self.times, using bisect_left function
         index = bisect_left(self.times, time)
-
-        # 3. using the retrieved index, interpolate between the two neighboring
-        # values in self.values, using the stored self.interpolate function
-        # TODO: insert your code from TP6 here
-        return self.interpolate(self.values[index], self.values[index+1], (time-self.times[index])/(self.times[index+1]-self.times[index]))
+        # 3. using the retrieved index, interpolate between the two neighboring values
+        # in self.values, using the initially stored self.interpolate function
+        return self.interpolate(self.values[index-1], self.values[index], (time-self.times[index-1])/(self.times[index]-self.times[index-1]))
 
 
 class TransformKeyFrames:
     """ KeyFrames-like object dedicated to 3D transforms """
     def __init__(self, translate_keys, rotate_keys, scale_keys):
         """ stores 3 keyframe sets for translation, rotation, scale """
-        # TODO: insert your code from TP6 here
         self.translation = KeyFrames(translate_keys, lerp)
         self.rotation = KeyFrames(rotate_keys, quaternion_slerp)
         self.scale = KeyFrames(scale_keys, lerp)
 
     def value(self, time):
         """ Compute each component's interpolation and compose TRS matrix """
-        # TODO: insert your code from TP6 here
         T = self.translation.value(time)
         R = quaternion_matrix(self.rotation.value(time))
         S = self.scale.value(time)
@@ -255,7 +250,7 @@ class TransformKeyFrames:
 
         for i in range(3):
             for j in range(3):
-                TRS[i][j]=R[i][j]*S
+                TRS[i][j]=R[i][j]*S[i]
 
         return TRS
 
