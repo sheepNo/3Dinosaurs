@@ -18,6 +18,7 @@ class KeyboardControlNode(Node):
         self.show = show
         self.time = time
         self.interact = interact
+        self.first_time = True
 
     def draw(self, projection, view, model, win=None, **param):
         assert win is not None
@@ -28,8 +29,8 @@ class KeyboardControlNode(Node):
         sin, cos = sincos(self.angle)
         new_z = -cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
         new_x = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        new_z += cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
-        new_x += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
+        # new_z += cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
+        # new_x += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 
         old_translation = translate(self.transform[0][3], self.transform[1][3], self.transform[2][3])
         new_translation = translate(self.speed*normalized(vec(new_x, 0, new_z)))
@@ -46,9 +47,16 @@ class KeyboardControlNode(Node):
                 # resets idle animation
                 glfw.set_time(0)
             if (self.interact):
-                # resets time for when the dino is close enough to trigger animation
                 glfw.set_time(0)
-        # if KEY_RELEASE
+        # elif self.first_time and self.interact and glfw.get_key(win, self.key_toggle) != glfw.PRESS:
+        #     # make sure the dino eating animation starts when toggle is pressed
+        #     glfw.set_time(0)
+        #     self.first_time = False
+        #
+        # if self.interact and (glfw.get_key(win, self.key_forward) == glfw.RELEASE or glfw.get_key(win, self.key_toggle) == glfw.RELEASE or glfw.get_key(win, self.key_toggle2) == glfw.RELEASE):
+        #     self.first_time = True
+        
+
 
         self.transform = translation @ rotate(self.axis, self.angle)
 
