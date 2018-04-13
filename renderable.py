@@ -74,7 +74,7 @@ class Ground(Node):
 # A node to make an object following the ground curve
 class GroundedNode(Node):
     # y_offset_with_origin is the length between the bottom of the Node and origin of its frame
-    def __init__(self, ground, x=0, z=0, y_offset_with_origin = 1):
+    def __init__(self, ground, x=0, z=0, y_offset_with_origin = 0):
         self.ground = ground
         self.y_offset_with_origin = y_offset_with_origin 
         self.x = x

@@ -127,7 +127,7 @@ def main():
 
     # moving cylinder on the ground at 0, 0 (debuging)
     grounded_cylinder = GroundedNode(ground).add(*load("assets/cylinder.obj"))
-    moving_cylinder = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
+    moving_cylinder = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_N)
     moving_cylinder.add(grounded_cylinder)
     viewer.add(moving_cylinder)
 
