@@ -26,16 +26,15 @@ class KeyboardControlNode(Node):
         self.angle -= 2 * int(glfw.get_key(win, self.key_right) == glfw.PRESS)
         # translation management
         sin, cos = sincos(self.angle)
-        new_x = cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        new_z = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
+        new_z = -cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
+        new_x = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
+        new_z += cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
+        new_x += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
+
         if (glfw.get_time() > self.time and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
             glfw.set_time(0)
         if (self.show and glfw.get_time() > self.time):
             glfw.set_time(0)
-        # if glfw.get_key(win, self.key_forward) == glfw.RELEASE:
-        #     glfw.set_time(2)
-        new_x += -cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
-        new_z += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 
         old_translation = translate(self.transform[0][3], self.transform[1][3], self.transform[2][3])
         new_translation = translate(self.speed*normalized(vec(new_x, 0, new_z)))

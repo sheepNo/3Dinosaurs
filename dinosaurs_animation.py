@@ -127,32 +127,16 @@ def main():
 
     viewer.add(ground)
 
-    # moving cylinder on the ground at 0, 0 (debuging)
     grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
     grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
     # grounded_dino_eat = GroundedNode(ground).add(*load_skinned("dino/Donosaurus_eat.dae"))
 
-    # # correct the .dae model orientation TODO: find a more elegant solution
-    rotation_node_walk = Node(transform=rotate(vec(0,1,0), -90))
-    rotation_node_walk.add(grounded_dino_walk)
-    rotation_node_idle = Node(transform=rotate(vec(0,1,0), -90))
-    rotation_node_idle.add(grounded_dino_idle)
-    # rotation_node_eat = Node(transform=rotate(vec(0,1,0), -90))
-    # rotation_node_eat.add(grounded_dino_eat)
-
-    translation_node_walk = Node(transform=translate(0, -1, 0))
-    translation_node_walk.add(rotation_node_walk)
-    translation_node_idle = Node(transform=translate(0, -1, 0))
-    translation_node_idle.add(rotation_node_idle)
-    # translation_node_eat = Node(transform=translate(0, -1, 0))
-    # translation_node_eat.add(rotation_node_eat)
-
     moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, False, 1, .15)
-    moving_dino_walk.add(translation_node_walk)
+    moving_dino_walk.add(grounded_dino_walk)
     moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, True, 3, .15)
-    moving_dino_idle.add(translation_node_idle)
+    moving_dino_idle.add(grounded_dino_idle)
     # moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, True, 5)
-    # moving_dino_eat.add(translation_node_eat)
+    # moving_dino_eat.add(rotation_node_eat)
 
     # # correct the .dae model orientation TODO: find a more elegant solution
     # rotation_node = Node(transform=rotate(vec(0,1,0), -90))
@@ -163,18 +147,6 @@ def main():
 
     viewer.add(moving_dino_walk, moving_dino_idle)
     # , moving_dino_eat)
-
-    # 4 cylinders on the ground (debuging)
-    #viewer.add(GroundedNode(ground, x=-10, z=-10).add(*load("assets/cylinder.obj")))
-    #viewer.add(GroundedNode(ground, x=10, z=-10).add(*load("assets/cylinder.obj")))
-    #viewer.add(GroundedNode(ground, x=-10, z=10).add(*load("assets/cylinder.obj")))
-    #viewer.add(GroundedNode(ground, x=10, z=10).add(*load("assets/cylinder.obj")))
-
-    # place instances of our basic objects
-    #viewer.add(*[mesh for file in sys.argv[1:] for mesh in load(file)])
-    #if len(sys.argv) < 2:
-    #    print('Usage:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
-    #          ' format supported by pyassimp.' % (sys.argv[0],))
 
     # start rendering loop
     viewer.run()
