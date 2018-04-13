@@ -14,8 +14,8 @@ import numpy as np          # matrices, vectors & quaternions are numpy arrays
 
 # Some useful functions on vectors -------------------------------------------
 def vec(*iterable):
-    """ shortcut to make numpy vector of any iterable(tuple...) or vector """
-    return np.asarray(iterable if len(iterable) > 1 else iterable[0], 'f')
+    """shortcut to make numpy vector out of any iterable(tuple...) or vector"""
+    return np.array(iterable, 'f') if len(iterable) > 1 else iterable[0]
 
 
 def normalized(vector):
@@ -91,7 +91,7 @@ def sincos(degrees=0.0, radians=None):
     return math.sin(radians), math.cos(radians)
 
 
-def rotate(axis=(1., 0., 0.), angle=0.0, radians=None):
+def rotate(axis=vec(1., 0., 0.), angle=0.0, radians=None):
     """ 4x4 rotation matrix around 'axis' with 'angle' degrees or 'radians' """
     x, y, z = normalized(vec(axis))
     s, c = sincos(angle, radians)
@@ -124,7 +124,7 @@ def quaternion(x=vec(0., 0., 0.), y=0.0, z=0.0, w=1.0):
 def quaternion_from_axis_angle(axis, degrees=0.0, radians=None):
     """ Compute quaternion from an axis vec and angle around this axis """
     sin, cos = sincos(radians=radians*0.5) if radians else sincos(degrees*0.5)
-    return quaternion(normalized(vec(axis))*sin, w=cos)
+    return quaternion(normalized(axis)*sin, w=cos)
 
 
 def quaternion_from_euler(yaw=0.0, pitch=0.0, roll=0.0, radians=None):
@@ -185,7 +185,7 @@ class Trackball:
 
     def drag(self, old, new, winsize):
         """ Move trackball from old to new 2d normalized window position """
-        old, new = ((2*vec(pos) - winsize) / winsize for pos in (old, new))
+        old, new = ((2*vec(*pos) - winsize) / winsize for pos in (old, new))
         self.rotation = quaternion_mul(self._rotate(old, new), self.rotation)
 
     def zoom(self, delta, size):
@@ -194,7 +194,7 @@ class Trackball:
 
     def pan(self, old, new):
         """ Pan in camera's reference by a 2d vector factor of (new - old) """
-        self.pos2d += (vec(new) - old) * 0.001 * self.distance
+        self.pos2d += (vec(*new) - old) * 0.001 * self.distance
 
     def view_matrix(self):
         """ View matrix transformation, including distance to target point """

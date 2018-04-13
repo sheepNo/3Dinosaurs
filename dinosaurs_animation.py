@@ -12,7 +12,7 @@ import OpenGL.GL as GL              # standard Python OpenGL wrapper
 import glfw                         # lean window system wrapper for OpenGL
 import numpy as np
 
-from transform import vec, translate, scale, identity, Trackball, sincos
+from transform import vec, translate, scale, rotate, identity, Trackball, sincos
 from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
                        quaternion_from_euler)
 
@@ -23,6 +23,7 @@ from shaders import load_shaders
 from renderable import Ground, GroundedNode
 from animation import KeyFrameControlNode
 from keyboard_control import KeyboardControlNode
+from viewer7 import load_skinned
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -112,10 +113,11 @@ class Viewer(Node):
             if key == glfw.KEY_ESCAPE or key == glfw.KEY_Q:
                 glfw.set_window_should_close(self.win, True)
             if key == glfw.KEY_SPACE:
+                # if glfw.get_time() > 3:
                 glfw.set_time(0)
             if key == glfw.KEY_W:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
-                
+
 # -------------- main program and scene setup --------------------------------
 def main():
     """ create a window, add scene objects, then run rendering loop """
@@ -126,10 +128,13 @@ def main():
     viewer.add(ground)
 
     # moving cylinder on the ground at 0, 0 (debuging)
-    grounded_cylinder = GroundedNode(ground).add(*load("assets/cylinder.obj"))
-    moving_cylinder = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
-    moving_cylinder.add(grounded_cylinder)
-    viewer.add(moving_cylinder)
+    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
+    moving_dino = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
+    # correct the rotation of the model TODO: find a more elegant solution
+    rotation_node = Node(transform=rotate(vec(0,1,0), -90))
+    rotation_node.add(grounded_dino)
+    moving_dino.add(rotation_node)
+    viewer.add(moving_dino)
 
     # 4 cylinders on the ground (debuging)
     #viewer.add(GroundedNode(ground, x=-10, z=-10).add(*load("assets/cylinder.obj")))
