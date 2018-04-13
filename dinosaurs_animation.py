@@ -112,9 +112,9 @@ class Viewer(Node):
         if action == glfw.PRESS or action == glfw.REPEAT:
             if key == glfw.KEY_ESCAPE or key == glfw.KEY_Q:
                 glfw.set_window_should_close(self.win, True)
-            if key == glfw.KEY_SPACE:
-                # if glfw.get_time() > 3:
-                glfw.set_time(0)
+            # if key == glfw.KEY_SPACE:
+            #     # if glfw.get_time() > 3:
+            #     glfw.set_time(0)
             if key == glfw.KEY_V:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
 

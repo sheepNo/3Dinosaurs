@@ -9,7 +9,7 @@ from model_loading import Node
 
 
 class KeyboardControlNode(Node):
-    def __init__(self, key_forward, key_backward, key_left, key_right, key_toggle, show=True, time=1, speed=.5, **param):
+    def __init__(self, key_forward, key_backward, key_left, key_right, key_toggle, show=True, interact=False, time=1, speed=.5, **param):
         super().__init__(**param)   # forward base constructor named arguments
         self.axis, self.angle = vec(0, 1, 0), 0
         self.key_forward, self.key_backward, self.key_left, self.key_right, self.key_toggle = key_forward, key_backward, key_left, key_right, key_toggle
@@ -17,6 +17,7 @@ class KeyboardControlNode(Node):
         self.speed = speed
         self.show = show
         self.time = time
+        self.interact = interact
 
     def draw(self, projection, view, model, win=None, **param):
         assert win is not None
@@ -46,6 +47,8 @@ class KeyboardControlNode(Node):
         if self.show:
             if (glfw.get_key(win, self.key_toggle) != glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
+            else:
+                super().draw(projection, view, None, win=win, x=translation[0][3], z=translation[2][3], **param)
         else:
             if (glfw.get_key(win, self.key_toggle) == glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
