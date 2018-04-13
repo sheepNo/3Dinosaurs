@@ -146,7 +146,8 @@ def main():
     # up_dino = Node(transform=translate(2, 4, 0))
     # up_dino.add(little_dino)
 
-    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat, Forest(ground, n_trees=20))
+    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat)
+    # , Forest(ground, n_trees=20))
     # , moving_dino_eat)
 
     # start rendering loop
