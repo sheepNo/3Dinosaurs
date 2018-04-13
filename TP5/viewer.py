@@ -672,15 +672,9 @@ def main():
     #cylinder_node = Node(name='my_cylinder', transform=translate(-1, 0, 0), color=(1, 0, 0.5, 1))
     #cylinder_node.add(Cylinder())
 
-<<<<<<< HEAD
     meshes = load_textured("bunny.obj")
     for m in meshes:
         viewer.add(m)
-=======
-    # meshes = load_textured("bunny.obj")
-    # for m in meshes:
-    #     viewer.add(m)
->>>>>>> 2ae526de0decc82d6b6133f6bf1784ab9cc4613f
 
     # viewer.add(TexturedPlane("grass.png"))
 
@@ -697,13 +691,13 @@ def main():
     # base_node = Node(transform=identity())   # robot base rotation with theta angle
     # base_node.add(base_shape, arm_node)
     # viewer.add(base_node)
-    translate_keys = {0: vec(0, 0, 0), 2: vec(1, 1, 0), 4: vec(0, 0, 0)}
-    rotate_keys = {0: quaternion(), 2: quaternion_from_euler(180, 45, 90),
-                   3: quaternion_from_euler(180, 0, 180), 4: quaternion()}
-    scale_keys = {0: vec(1,1,1), 2: vec(0.5,0.5,0.5), 4: vec(1,1,1)}
-    keynode = KeyFrameControlNode(translate_keys, rotate_keys, scale_keys)
-    keynode.add(Cylinder())
-    viewer.add(keynode)
+    # translate_keys = {0: vec(0, 0, 0), 2: vec(1, 1, 0), 4: vec(0, 0, 0)}
+    # rotate_keys = {0: quaternion(), 2: quaternion_from_euler(180, 45, 90),
+    #                3: quaternion_from_euler(180, 0, 180), 4: quaternion()}
+    # scale_keys = {0: vec(1,1,1), 2: vec(0.5,0.5,0.5), 4: vec(1,1,1)}
+    # keynode = KeyFrameControlNode(translate_keys, rotate_keys, scale_keys)
+    # keynode.add(Cylinder())
+    # viewer.add(keynode)
     viewer.run()
 
 

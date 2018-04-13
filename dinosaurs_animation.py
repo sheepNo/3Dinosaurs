@@ -24,6 +24,7 @@ from renderable import Ground, GroundedNode
 from animation import KeyFrameControlNode
 from keyboard_control import KeyboardControlNode
 from viewer7 import load_skinned
+from texture import load_textured
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -128,7 +129,9 @@ def main():
     viewer.add(ground)
 
     # moving cylinder on the ground at 0, 0 (debuging)
-    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk2.dae"))
+    #grounded_dino = GroundedNode(ground).add(*load_textured("dino/Dinosaurus_walk2.dae"))
+
+    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
 
     # correct the rotation of the model TODO: find a more elegant solution
     rotation_node = Node(transform=rotate(vec(0,1,0), -90))

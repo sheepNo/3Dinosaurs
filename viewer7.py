@@ -19,149 +19,9 @@ from transform import translate, scale, identity, Trackball, sincos, vec
 from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
                        quaternion_from_euler)
 
-# import texture.py
-
-
-
-# ------------ low level OpenGL object wrappers ----------------------------
-class Shader:
-    """ Helper class to create and automatically destroy shader program """
-    @staticmethod
-    def _compile_shader(src, shader_type):
-        src = open(src, 'r').read() if os.path.exists(src) else src
-        src = src.decode('ascii') if isinstance(src, bytes) else src
-        shader = GL.glCreateShader(shader_type)
-        GL.glShaderSource(shader, src)
-        GL.glCompileShader(shader)
-        status = GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS)
-        src = ('%3d: %s' % (i+1, l) for i, l in enumerate(src.splitlines()))
-        if not status:
-            log = GL.glGetShaderInfoLog(shader).decode('ascii')
-            GL.glDeleteShader(shader)
-            src = '\n'.join(src)
-            print('Compile failed for %s\n%s\n%s' % (shader_type, log, src))
-            return None
-        return shader
-
-    def __init__(self, vertex_source, fragment_source):
-        """ Shader can be initialized with raw strings or source file names """
-        self.glid = None
-        vert = self._compile_shader(vertex_source, GL.GL_VERTEX_SHADER)
-        frag = self._compile_shader(fragment_source, GL.GL_FRAGMENT_SHADER)
-        if vert and frag:
-            self.glid = GL.glCreateProgram()  # pylint: disable=E1111
-            GL.glAttachShader(self.glid, vert)
-            GL.glAttachShader(self.glid, frag)
-            GL.glLinkProgram(self.glid)
-            GL.glDeleteShader(vert)
-            GL.glDeleteShader(frag)
-            status = GL.glGetProgramiv(self.glid, GL.GL_LINK_STATUS)
-            if not status:
-                print(GL.glGetProgramInfoLog(self.glid).decode('ascii'))
-                GL.glDeleteProgram(self.glid)
-                self.glid = None
-
-    def __del__(self):
-        GL.glUseProgram(0)
-        if self.glid:                      # if this is a valid shader object
-            GL.glDeleteProgram(self.glid)  # object dies => destroy GL object
-
-
-class VertexArray:
-    """helper class to create and self destroy vertex array objects."""
-    def __init__(self, attributes, index=None, usage=GL.GL_STATIC_DRAW):
-        """ Vertex array from attributes and optional index array. Vertex
-            attribs should be list of arrays with dim(0) indexed by vertex. """
-
-        # create vertex array object, bind it
-        self.glid = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.glid)
-        self.buffers = []  # we will store buffers in a list
-        nb_primitives, size = 0, 0
-
-        # load a buffer per initialized vertex attribute (=dictionary)
-        for loc, data in enumerate(attributes):
-            if data is None:
-                continue
-
-            # bind a new vbo, upload its data to GPU, declare its size and type
-            self.buffers += [GL.glGenBuffers(1)]
-            data = np.array(data, np.float32, copy=False)
-            nb_primitives, size = data.shape
-            GL.glEnableVertexAttribArray(loc)  # activates for current vao only
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.buffers[-1])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, data, usage)
-            GL.glVertexAttribPointer(loc, size, GL.GL_FLOAT, False, 0, None)
-
-        # optionally create and upload an index buffer for this object
-        self.draw_command = GL.glDrawArrays
-        self.arguments = (0, nb_primitives)
-        if index is not None:
-            self.buffers += [GL.glGenBuffers(1)]
-            index_buffer = np.array(index, np.int32, copy=False)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.buffers[-1])
-            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, index_buffer, usage)
-            self.draw_command = GL.glDrawElements
-            self.arguments = (index_buffer.size, GL.GL_UNSIGNED_INT, None)
-
-        # cleanup and unbind so no accidental subsequent state update
-        GL.glBindVertexArray(0)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-
-    def draw(self, primitive):
-        """draw a vertex array, either as direct array or indexed array"""
-        GL.glBindVertexArray(self.glid)
-        self.draw_command(primitive, *self.arguments)
-        GL.glBindVertexArray(0)
-
-    def __del__(self):  # object dies => kill GL array and buffers from GPU
-        GL.glDeleteVertexArrays(1, [self.glid])
-        GL.glDeleteBuffers(len(self.buffers), self.buffers)
-
-
-# ------------  simple color fragment shader demonstrated in Practical 1 ------
-COLOR_VERT = """#version 330 core
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 color;
-
-uniform mat4 modelviewprojection;
-out vec3 fragColor;
-
-void main() {
-    gl_Position = modelviewprojection * vec4(position, 1);
-    fragColor = color;
-}"""
-
-
-COLOR_FRAG = """#version 330 core
-in vec3 fragColor;
-out vec4 outColor;
-void main() {
-    outColor = vec4(fragColor, 1);
-}"""
-
-
-# ------------  Scene object classes ------------------------------------------
-class Node:
-    """ Scene graph transform and parameter broadcast node """
-
-    def __init__(self, name='', children=(), transform=identity(), **param):
-        self.transform, self.param, self.name = transform, param, name
-        self.children = list(iter(children))
-
-    def add(self, *drawables):
-        """ Add drawables to this node, simply updating children list """
-        self.children.extend(drawables)
-
-    def draw(self, projection, view, model, **param):
-        """ Recursive draw, passing down named parameters & model matrix. """
-        # merge named parameters given at initialization with those given here
-        param = dict(param, **self.param)
-        model = model @ self.transform
-        for child in self.children:
-            child.draw(projection, view, model, **param)
-
+from texture import Texture
+from model_loading import Node, VertexArray
+from shaders import Shader
 
 # -------------- Keyframing Utilities TP6 ------------------------------------
 # Basic keyframe interpolation
@@ -234,10 +94,9 @@ MAX_VERTEX_BONES = 4
 MAX_BONES = 128
 
 # new shader for skinned meshes, fully compatible with previous color fragment
-# TODO: complete the loop for TP7 exercise 1
-SKINNING_VERT = """#version 330 core
+SKINNING_TEXTURE_VERT = """#version 330 core
 // ---- camera geometry
-uniform mat4 projection, view;
+uniform mat4 modelviewprojection;
 
 // ---- skinning globals and attributes
 const int MAX_VERTEX_BONES=%d, MAX_BONES=%d;
@@ -248,9 +107,10 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec4 bone_ids;
 layout(location = 3) in vec4 bone_weights;
+layout(location = 4) in vec2 tex_uv;
 
 // ----- interpolated attribute variables to be passed to fragment shader
-out vec3 fragColor;
+out vec2 fragTexCoord;
 
 void main() {
 
@@ -279,38 +139,45 @@ void main() {
 
     // ------ compute world and normalized eye coordinates of our vertex
     vec4 wPosition4 = skinMatrix * vec4(position, 1.0);
-    gl_Position = projection * view * wPosition4;
+    gl_Position = modelviewprojection * wPosition4;
 
-    fragColor = color;
+    fragTexCoord = tex_uv;
 }
 """ % (MAX_VERTEX_BONES, MAX_BONES)
 
+TEXTURE_FRAG = """#version 330 core
+uniform sampler2D diffuseMap;
+in vec2 fragTexCoord;
+out vec4 outColor;
+void main() {
+    outColor = texture(diffuseMap, fragTexCoord);
+}"""
 
 class SkinnedMesh:
     """class of skinned mesh nodes in scene graph """
-    def __init__(self, attributes, bone_nodes, bone_offsets, index=None):
+    def __init__(self, attributes, texture, bone_nodes, bone_offsets, index=None):
 
         # setup shader attributes for linear blend skinning shader
         self.vertex_array = VertexArray(attributes, index)
 
-        # feel free to move this up in Viewer as shown in previous practicals
-        self.skinning_shader = Shader(SKINNING_VERT, COLOR_FRAG)
+        self.skinning_texture_shader = Shader(SKINNING_TEXTURE_VERT, TEXTURE_FRAG)
 
         # store skinning data
         self.bone_nodes = bone_nodes
         self.bone_offsets = bone_offsets
+        # for texture
+        self.texture = texture
 
-    def draw(self, projection, view, _model, **_kwargs):
+
+    def draw(self, projection, view, model, **_kwargs):
         """ skinning object draw method """
 
-        shid = self.skinning_shader.glid
+        shid = self.skinning_texture_shader.glid
         GL.glUseProgram(shid)
 
         # setup camera geometry parameters
-        loc = GL.glGetUniformLocation(shid, 'projection')
-        GL.glUniformMatrix4fv(loc, 1, True, projection)
-        loc = GL.glGetUniformLocation(shid, 'view')
-        GL.glUniformMatrix4fv(loc, 1, True, view)
+        loc = GL.glGetUniformLocation(shid, 'modelviewprojection')
+        GL.glUniformMatrix4fv(loc, 1, True, projection @ view @ model)
 
         # bone world transform matrices need to be passed for skinning
         for bone_id, node in enumerate(self.bone_nodes):
@@ -319,10 +186,17 @@ class SkinnedMesh:
             bone_loc = GL.glGetUniformLocation(shid, 'boneMatrix[%d]' % bone_id)
             GL.glUniformMatrix4fv(bone_loc, 1, True, bone_matrix)
 
+        # texture access setups
+        loc = GL.glGetUniformLocation(shid, 'diffuseMap')
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture.glid)
+        GL.glUniform1i(loc, 0)
+
         # draw mesh vertex array
         self.vertex_array.draw(GL.GL_TRIANGLES)
 
         # leave with clean OpenGL state, to make it easier to detect problems
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
         GL.glUseProgram(0)
 
 
@@ -344,70 +218,6 @@ class SkinningControlNode(Node):
 
         # default node behaviour (call children's draw method)
         super().draw(projection, view, model, **param)
-
-
-# -------------- Deformable Cylinder Mesh  ------------------------------------
-class SkinnedCylinder(SkinningControlNode):
-    """ Deformable cylinder """
-    def __init__(self, sections=11, quarters=20, **params):
-
-        # this "arm" node and its transform serves as control node for bone 0
-        # we give it the default identity keyframe transform, doesn't move
-        super().__init__({0: (0, 0, 0)}, {0: quaternion()}, {0: 1}, **params)
-
-        # we add a son "forearm" node with animated rotation for the second
-        # part of the cylinder
-        self.add(SkinningControlNode(
-            {0: (0, 0, 0)},
-            {0: quaternion(), 2: quaternion_from_euler(90), 4: quaternion()},
-            {0: 1}))
-
-        # there are two bones in this animation corresponding to above noes
-        bone_nodes = [self, self.children[0]]
-
-        # these bones have no particular offset transform
-        bone_offsets = [identity(), identity()]
-
-        # vertices, per vertex bone_ids and weights
-        vertices, faces, bone_id, bone_weights = [], [], [], []
-        for x_c in range(sections+1):
-            for angle in range(quarters):
-                # compute vertex coordinates sampled on a cylinder
-                z_c, y_c = sincos(360 * angle / quarters)
-                vertices.append((x_c - sections/2, y_c, z_c))
-
-                # the index of the 4 prominent bones influencing this vertex.
-                # since in this example there are only 2 bones, every vertex
-                # is influenced by the two only bones 0 and 1
-                bone_id.append((0, 1, 0, 0))
-
-                # per-vertex weights for the 4 most influential bones given in
-                # a vec4 vertex attribute. Not using indices 2 & 3 => 0 weight
-                # vertex weight is currently a hard transition in the middle
-                # of the cylinder
-                # TODO: modify weights here for TP7 exercise 2
-                weight = 1 if x_c <= sections/2 else 0
-                bone_weights.append((weight, 1 - weight, 0, 0))
-
-        # face indices
-        faces = []
-        for x_c in range(sections):
-            for angle in range(quarters):
-
-                # indices of the 4 vertices of the current quad, % helps
-                # wrapping to finish the circle sections
-                ir0c0 = x_c * quarters + angle
-                ir1c0 = (x_c + 1) * quarters + angle
-                ir0c1 = x_c * quarters + (angle + 1) % quarters
-                ir1c1 = (x_c + 1) * quarters + (angle + 1) % quarters
-
-                # add the 2 corresponding triangles per quad on the cylinder
-                faces.extend([(ir0c0, ir0c1, ir1c1), (ir0c0, ir1c1, ir1c0)])
-
-        # the skinned mesh itself. it doesn't matter where in the hierarchy
-        # this is added as long as it has the proper bone_node table
-        self.add(SkinnedMesh([vertices, bone_weights, bone_id, bone_weights],
-                             bone_nodes, bone_offsets, faces))
 
 
 # -------------- 3D resource loader -------------------------------------------
@@ -455,6 +265,20 @@ def load_skinned(file):
         return node
 
     root_node = make_nodes(scene.rootnode)
+    # Note: embedded textures not supported at the moment
+    path = os.path.dirname(file)
+    path = os.path.join('.', '') if path == '' else path
+    for mat in scene.materials:
+        mat.tokens = dict(reversed(list(mat.properties.items())))
+        if 'file' in mat.tokens:  # texture file token
+            tname = mat.tokens['file'].split('/')[-1].split('\\')[-1]
+            # search texture in file's whole subdir since path often screwed up
+            tname = [os.path.join(d[0], f) for d in os.walk(path) for f in d[2]
+                     if tname.startswith(f) or f.startswith(tname)]
+            if tname:
+                mat.texture = tname[0]
+            else:
+                print('Failed to find texture:', tname)
 
     # ---- create SkinnedMesh objects
     for mesh in scene.meshes:
@@ -473,11 +297,21 @@ def load_skinned(file):
         bone_nodes = [nodes[bone.name][0] for bone in mesh.bones]
         bone_offsets = [bone.offsetmatrix for bone in mesh.bones]
 
+        if mesh.materialindex == 1:
+            texture =  scene.materials[1].texture
+        if mesh.materialindex == 2:
+            texture = scene.materials[2].texture
+        print(texture)
+        # tex coords in raster order: compute 1 - y to follow OpenGL convention
+        tex_uv = ((0, 1) + mesh.texturecoords[0][:, :2] * (1, -1)
+                  if mesh.texturecoords.size else None)
+
         # initialize skinned mesh and store in pyassimp_mesh for node addition
         mesh.skinned_mesh = SkinnedMesh(
-                [mesh.vertices, mesh.normals, v_bone['id'], v_bone['weight']],
-                bone_nodes, bone_offsets, mesh.faces
+                [mesh.vertices, mesh.normals, v_bone['id'], v_bone['weight'], tex_uv],
+                Texture(texture), bone_nodes, bone_offsets, mesh.faces
         )
+
 
     # ------ add each mesh to its intended nodes as indicated by assimp
     for final_node, assimp_node in nodes.values():
@@ -513,101 +347,3 @@ class GLFWTrackball(Trackball):
     def on_scroll(self, win, _deltax, deltay):
         """ Scroll controls the camera distance to trackball center """
         self.zoom(deltay, glfw.get_window_size(win)[1])
-
-
-class Viewer:
-    """ GLFW viewer window, with classic initialization & graphics loop """
-
-    def __init__(self, width=640, height=480):
-
-        # version hints: create GL window with >= OpenGL 3.3 and core profile
-        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
-        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
-        glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL.GL_TRUE)
-        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-        glfw.window_hint(glfw.RESIZABLE, False)
-        self.win = glfw.create_window(width, height, 'Viewer', None, None)
-
-        # make win's OpenGL context current; no OpenGL calls can happen before
-        glfw.make_context_current(self.win)
-
-        # register event handlers
-        glfw.set_key_callback(self.win, self.on_key)
-
-        # useful message to check OpenGL renderer characteristics
-        print('OpenGL', GL.glGetString(GL.GL_VERSION).decode() + ', GLSL',
-              GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION).decode() +
-              ', Renderer', GL.glGetString(GL.GL_RENDERER).decode())
-
-        # initialize GL by setting viewport and default render characteristics
-        GL.glClearColor(0.1, 0.1, 0.1, 0.1)
-        GL.glEnable(GL.GL_DEPTH_TEST)         # depth test now enabled (TP2)
-        GL.glEnable(GL.GL_CULL_FACE)          # backface culling enabled (TP2)
-
-        # compile and initialize shader programs once globally
-        self.color_shader = Shader(COLOR_VERT, COLOR_FRAG)
-
-        # initially empty list of object to draw
-        self.drawables = []
-        self.trackball = GLFWTrackball(self.win)
-
-        # cyclic iterator to easily toggle polygon rendering modes
-        self.fill_modes = cycle([GL.GL_LINE, GL.GL_POINT, GL.GL_FILL])
-
-    def run(self):
-        """ Main render loop for this OpenGL window """
-        while not glfw.window_should_close(self.win):
-            # clear draw buffer and depth buffer (<-TP2)
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-
-            winsize = glfw.get_window_size(self.win)
-            view = self.trackball.view_matrix()
-            projection = self.trackball.projection_matrix(winsize)
-
-            # draw our scene objects
-            for drawable in self.drawables:
-                drawable.draw(projection, view, identity(), win=self.win,
-                              color_shader=self.color_shader)
-
-            # flush render commands, and swap draw buffers
-            glfw.swap_buffers(self.win)
-
-            # Poll for and process events
-            glfw.poll_events()
-
-    def add(self, *drawables):
-        """ add objects to draw in this window """
-        self.drawables.extend(drawables)
-
-    def on_key(self, _win, key, _scancode, action, _mods):
-        """ 'Q' or 'Escape' quits """
-        if action == glfw.PRESS or action == glfw.REPEAT:
-            if key == glfw.KEY_ESCAPE or key == glfw.KEY_Q:
-                glfw.set_window_should_close(self.win, True)
-            if key == glfw.KEY_W:
-                GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
-            if key == glfw.KEY_SPACE:
-                glfw.set_time(0)
-
-
-# -------------- main program and scene setup --------------------------------
-def main():
-    """ create a window, add scene objects, then run rendering loop """
-    viewer = Viewer()
-
-    if len(sys.argv) < 2:
-        print('Cylinder skinning demo.')
-        print('Note:\n\t%s [3dfile]*\n\n3dfile\t\t the filename of a model in'
-              ' format supported by pyassimp.' % sys.argv[0])
-        viewer.add(SkinnedCylinder())
-    else:
-        viewer.add(*[m for file in sys.argv[1:] for m in load_skinned(file)])
-
-    # start rendering loop
-    viewer.run()
-
-
-if __name__ == '__main__':
-    glfw.init()                # initialize window system glfw
-    main()                     # main function keeps variables locally scoped
-    glfw.terminate()           # destroy all glfw windows and GL contexts
