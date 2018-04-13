@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
   <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2017-12-09T13:00:20Z</created><keywords></keywords><modified>2017-12-09T13:00:20Z</modified><revision></revision><subject></subject><title></title><unit meter="0.010000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
-  <library_images>
+  <!-- <library_images>
     <image id="Donosaurus.jpg-image" name="Donosaurus.jpg"><init_from>../textures/Donosaurus.jpg</init_from></image>
     <image id="Dino_spec.png-image" name="Dino_spec.png"><init_from>../textures/Dino_spec.png</init_from></image>
-  </library_images>
+  </library_images> -->
   <library_materials>
     <material id="Материал" name="Материал">
       <instance_effect url="#Материал-fx"/>
@@ -66,7 +66,7 @@
               <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
             </ambient>
             <diffuse>
-              <texture texture="Donosaurus.jpg-image" texcoord="CHANNEL0">
+              <!-- <texture texture="Donosaurus.jpg-image" texcoord="CHANNEL0">
                 <extra>
                   <technique profile="MAYA">
                     <wrapU sid="wrapU0">TRUE</wrapU>
@@ -74,7 +74,7 @@
                     <blend_mode>ADD</blend_mode>
                   </technique>
                 </extra>
-              </texture>
+              </texture> -->
             </diffuse>
             <specular>
               <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>
@@ -97,7 +97,7 @@
               <color sid="diffuse">0.000000  0.000000 0.000000 1.000000</color>
             </diffuse>
             <specular>
-              <texture texture="Dino_spec.png-image" texcoord="CHANNEL0">
+              <!-- <texture texture="Dino_spec.png-image" texcoord="CHANNEL0">
                 <extra>
                   <technique profile="MAYA">
                     <wrapU sid="wrapU0">TRUE</wrapU>
@@ -105,7 +105,7 @@
                     <blend_mode>ADD</blend_mode>
                   </technique>
                 </extra>
-              </texture>
+              </texture> -->
             </specular>
           </phong>
         </technique>

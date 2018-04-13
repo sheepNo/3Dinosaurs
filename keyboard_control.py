@@ -9,12 +9,14 @@ from model_loading import Node
 
 
 class KeyboardControlNode(Node):
-    def __init__(self, key_forward, key_backward, key_left, key_right, speed=.5, **param):
+    def __init__(self, key_forward, key_backward, key_left, key_right, key_toggle, show=True, time=1, speed=.5, **param):
         super().__init__(**param)   # forward base constructor named arguments
         self.axis, self.angle = vec(0, 1, 0), 0
-        self.key_forward, self.key_backward, self.key_left, self.key_right = key_forward, key_backward, key_left, key_right
+        self.key_forward, self.key_backward, self.key_left, self.key_right, self.key_toggle = key_forward, key_backward, key_left, key_right, key_toggle
         self.transform = translate(0, 0, 0)
         self.speed = speed
+        self.show = show
+        self.time = time
 
     def draw(self, projection, view, model, win=None, **param):
         assert win is not None
@@ -25,10 +27,12 @@ class KeyboardControlNode(Node):
         sin, cos = sincos(self.angle)
         new_x = cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
         new_z = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        if (glfw.get_time() > 1 and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
+        if (glfw.get_time() > self.time and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
             glfw.set_time(0)
-        if glfw.get_key(win, self.key_forward) == glfw.RELEASE:
-            glfw.set_time(2)
+        if (self.show and glfw.get_time() > self.time):
+            glfw.set_time(0)
+        # if glfw.get_key(win, self.key_forward) == glfw.RELEASE:
+        #     glfw.set_time(2)
         new_x += -cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
         new_z += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 
@@ -39,4 +43,9 @@ class KeyboardControlNode(Node):
         self.transform = translation @ rotate(self.axis, self.angle)
 
         # call Node's draw method to pursue the hierarchical tree calling
-        super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
+        if self.show:
+            if (glfw.get_key(win, self.key_toggle) != glfw.PRESS):
+                super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
+        else:
+            if (glfw.get_key(win, self.key_toggle) == glfw.PRESS):
+                super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)

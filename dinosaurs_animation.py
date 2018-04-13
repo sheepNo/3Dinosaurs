@@ -115,7 +115,7 @@ class Viewer(Node):
             if key == glfw.KEY_SPACE:
                 # if glfw.get_time() > 3:
                 glfw.set_time(0)
-            if key == glfw.KEY_W:
+            if key == glfw.KEY_V:
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
 
 # -------------- main program and scene setup --------------------------------
@@ -128,18 +128,41 @@ def main():
     viewer.add(ground)
 
     # moving cylinder on the ground at 0, 0 (debuging)
-    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk2.dae"))
+    grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
+    grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
+    # grounded_dino_eat = GroundedNode(ground).add(*load_skinned("dino/Donosaurus_eat.dae"))
 
-    # correct the rotation of the model TODO: find a more elegant solution
-    rotation_node = Node(transform=rotate(vec(0,1,0), -90))
-    rotation_node.add(grounded_dino)
-    translation_node = Node(transform=translate(0, -1, 0))
-    translation_node.add(rotation_node)
+    # # correct the .dae model orientation TODO: find a more elegant solution
+    rotation_node_walk = Node(transform=rotate(vec(0,1,0), -90))
+    rotation_node_walk.add(grounded_dino_walk)
+    rotation_node_idle = Node(transform=rotate(vec(0,1,0), -90))
+    rotation_node_idle.add(grounded_dino_idle)
+    # rotation_node_eat = Node(transform=rotate(vec(0,1,0), -90))
+    # rotation_node_eat.add(grounded_dino_eat)
 
-    moving_dino = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
-    moving_dino.add(translation_node)
+    translation_node_walk = Node(transform=translate(0, -1, 0))
+    translation_node_walk.add(rotation_node_walk)
+    translation_node_idle = Node(transform=translate(0, -1, 0))
+    translation_node_idle.add(rotation_node_idle)
+    # translation_node_eat = Node(transform=translate(0, -1, 0))
+    # translation_node_eat.add(rotation_node_eat)
 
-    viewer.add(moving_dino)
+    moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, False, 1, .15)
+    moving_dino_walk.add(translation_node_walk)
+    moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, True, 3, .15)
+    moving_dino_idle.add(translation_node_idle)
+    # moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, True, 5)
+    # moving_dino_eat.add(translation_node_eat)
+
+    # # correct the .dae model orientation TODO: find a more elegant solution
+    # rotation_node = Node(transform=rotate(vec(0,1,0), -90))
+    # rotation_node.add(moving_dino_walk)
+    # # , moving_dino_eat, moving_dino_idle)
+    # translation_node = Node(transform=translate(0, -1, 0))
+    # translation_node.add(rotation_node)
+
+    viewer.add(moving_dino_walk, moving_dino_idle)
+    # , moving_dino_eat)
 
     # 4 cylinders on the ground (debuging)
     #viewer.add(GroundedNode(ground, x=-10, z=-10).add(*load("assets/cylinder.obj")))
