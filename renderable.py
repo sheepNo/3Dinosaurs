@@ -1,5 +1,6 @@
 """
-Module for some special renderable objects (sa the ground)
+Module for some special renderable objects (sa the ground, trees, etc)
+Every created renderable object should be associated with a shader and possibly a function to load needed uniforms
 """
 
 from model_loading import load, Node, ColorMesh
@@ -11,7 +12,7 @@ from random import randint
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
     """ Very simple cylinder based on practical 2 load function """
-    def __init__(self):
+    def __init__(self, color=None):
         super().__init__()
         self.add(*load('assets/cylinder.obj'))  # just load the cylinder from file
 
@@ -72,6 +73,9 @@ class Ground(Node):
             return self.heights[z_pos*self.width + x_pos]
         else: return 0
 
+    def draw(self, projection, view, model, **_kwargs):
+        super().draw(projection, view, model, **_kwargs)
+
 # A node to make an object following the ground curve
 class GroundedNode(Node):
     # y_offset_with_origin is the length between the bottom of the Node and origin of its frame
@@ -88,8 +92,18 @@ class GroundedNode(Node):
         self.transform = translate(self.x, self.ground.get_local_height(x, z) + self.y_offset_with_origin, self.z)
         super().draw(projection, view, model, **_kwargs)
 
+# A leaf to be part of a tree
+class Leaf(Node):
+    def __init__(self, translation, scaling, shape_node, color):
+        self.color = color
+        super().__init__(transform=translation @ scaling, children=[shape_node])
+    def draw(self, projection, view, model, **_kwargs):
+        #super().draw(projection, view, model, color_shader="color", values=[self.color], **_kwargs)
+        super().draw(projection, view, model, **_kwargs)
+
 # A tree class that can be put on the ground
 class Tree(GroundedNode):
+
     def __init__(self, ground, x=0, z=0, n_leaves=10, cylinder_node=None): # n_leaves is typically between 8 and 15
         # we can provide a cylinder node if we don't want to reload one
         assert n_leaves > 0, "A tree should have more than 1 leaf"
@@ -97,16 +111,19 @@ class Tree(GroundedNode):
         if cylinder_node is None:
             cylinder_node = Cylinder()
         # trunk of the tree
-        trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
+        #trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
+        trunk = Leaf(translate(0, 0, 0), scale(0.5, 1, 0.5), cylinder_node, (255, 0, 0, 1))
         self.add(trunk)
         # adding the leaves
         last_leaf = trunk
-        new_leaf = Node(transform=translate(0, 1, 0) @ scale(4, 0.2, 4), children=[cylinder_node])
+        #new_leaf = Node(transform=translate(0, 1, 0) @ scale(4, 0.2, 4), children=[cylinder_node])
+        new_leaf = Leaf(translate(0, 1, 0), scale(4, 0.2, 4), cylinder_node, (0, 255, 0, 1))
         # every leaf is created as a children of the below one
         for i in range(n_leaves):
             last_leaf.add(new_leaf)
             last_leaf = new_leaf
-            new_leaf = Node(transform=translate(0, 2, 0) @ scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), children=[cylinder_node])
+            #new_leaf = Node(transform=translate(0, 2, 0) @ scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), children=[cylinder_node])
+            new_leaf = Leaf(translate(0, 2, 0), scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), cylinder_node, (0, 0, 255, 1))
 
 # Now that we have some trees we can do a forest
 class Forest(Node):
