@@ -20,7 +20,7 @@ from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
 from model_loading import load, Node
 from shaders import load_shaders
 
-from renderable import Ground, GroundedNode
+from renderable import Ground, GroundedNode, Tree, Forest
 from animation import KeyFrameControlNode
 from keyboard_control import KeyboardControlNode
 from viewer7 import load_skinned
@@ -133,11 +133,11 @@ def main():
 
     # ground_dino_eaten = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle.dae"))
 
-    moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, show=False, time=1, speed=.15)
+    moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, show=False, time=1, speed=.22)
     moving_dino_walk.add(grounded_dino_walk)
-    moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, glfw.KEY_SPACE, time=3, speed=.15)
+    moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, glfw.KEY_SPACE, time=3, speed=.22)
     moving_dino_idle.add(grounded_dino_idle)
-    moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, show=False, interact=True, time=5, speed=.15)
+    moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, show=False, interact=True, time=5, speed=.22)
     moving_dino_eat.add(grounded_dino_eat)
 
     # little_dino = Node(transform=scale(0.3,0.3,0.3))
@@ -146,7 +146,7 @@ def main():
     # up_dino = Node(transform=translate(2, 4, 0))
     # up_dino.add(little_dino)
 
-    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat)
+    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat, Forest(ground, n_trees=20))
     # , moving_dino_eat)
 
     # start rendering loop
