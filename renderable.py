@@ -90,10 +90,12 @@ class GroundedNode(Node):
 
 # A tree class that can be put on the ground
 class Tree(GroundedNode):
-    def __init__(self, ground, x=0, z=0, n_leaves=10): # n_leaves is typically between 8 and 15
+    def __init__(self, ground, x=0, z=0, n_leaves=10, cylinder_node=None): # n_leaves is typically between 8 and 15
+        # we can provide a cylinder node if we don't want to reload one
         assert n_leaves > 0, "A tree should have more than 1 leaf"
         super().__init__(ground, x, z, y_offset_with_origin=1)
-        cylinder_node = Cylinder()
+        if cylinder_node is None:
+            cylinder_node = Cylinder()
         # trunk of the tree
         trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
         self.add(trunk)
@@ -110,6 +112,7 @@ class Tree(GroundedNode):
 class Forest(Node):
     def __init__(self, ground, n_trees=10):
         super().__init__()
+        cylinder_node = Cylinder()
         positions = [(2*ground.min_x, 2*ground.min_z)]*(n_trees+1)
         for i in range(n_trees):
             # random parameters for each tree
@@ -127,4 +130,4 @@ class Forest(Node):
                 new_pos = (randint(int(ground.min_x), -int(ground.min_x)), randint(int(ground.min_z), -int(ground.min_z)))
             # we can add the tree to the current forest
             positions[i] = new_pos
-            self.add(Tree(ground, new_pos[0], new_pos[1], leaves))
+            self.add(Tree(ground, new_pos[0], new_pos[1], leaves, cylinder_node))

@@ -127,11 +127,6 @@ def main():
 
     viewer.add(ground)
 
-    #viewer.add(Tree(ground))
-    #viewer.add(Tree(ground, x=10))
-    #viewer.add(Tree(ground, z=10, n_leaves=15))
-    #viewer.add(Tree(ground, x=-10, z=-10, n_leaves=8))
-
     viewer.add(Forest(ground, n_trees=20))
 
     #grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
