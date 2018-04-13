@@ -100,11 +100,11 @@ class Texture:
 TEXTURE_VERT = """#version 330 core
 uniform mat4 modelviewprojection;
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 tex_uv;
+layout(location = 1) in vec2 tex;
 out vec2 fragTexCoord;
 void main() {
     gl_Position = modelviewprojection * vec4(position, 1);
-    fragTexCoord = tex_uv;
+    fragTexCoord =tex;
 }"""
 
 TEXTURE_FRAG = """#version 330 core
@@ -672,9 +672,15 @@ def main():
     #cylinder_node = Node(name='my_cylinder', transform=translate(-1, 0, 0), color=(1, 0, 0.5, 1))
     #cylinder_node.add(Cylinder())
 
+<<<<<<< HEAD
+    meshes = load_textured("bunny.obj")
+    for m in meshes:
+        viewer.add(m)
+=======
     # meshes = load_textured("bunny.obj")
     # for m in meshes:
     #     viewer.add(m)
+>>>>>>> 2ae526de0decc82d6b6133f6bf1784ab9cc4613f
 
     # viewer.add(TexturedPlane("grass.png"))
 
