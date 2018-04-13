@@ -17,8 +17,6 @@ class KeyboardControlNode(Node):
         self.speed = speed
 
     def draw(self, projection, view, model, win=None, **param):
-        if (glfw.get_time() > 1 and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
-            glfw.set_time(0)
         assert win is not None
         # rotation management
         self.angle += 2 * int(glfw.get_key(win, self.key_left) == glfw.PRESS)
@@ -27,6 +25,10 @@ class KeyboardControlNode(Node):
         sin, cos = sincos(self.angle)
         new_x = cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
         new_z = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
+        if (glfw.get_time() > 1 and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
+            glfw.set_time(0)
+        if glfw.get_key(win, self.key_forward) == glfw.RELEASE:
+            glfw.set_time(2)
         new_x += -cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
         new_z += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 

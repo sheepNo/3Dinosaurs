@@ -128,12 +128,17 @@ def main():
     viewer.add(ground)
 
     # moving cylinder on the ground at 0, 0 (debuging)
-    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
-    moving_dino = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
+    grounded_dino = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk2.dae"))
+
     # correct the rotation of the model TODO: find a more elegant solution
     rotation_node = Node(transform=rotate(vec(0,1,0), -90))
     rotation_node.add(grounded_dino)
-    moving_dino.add(rotation_node)
+    translation_node = Node(transform=translate(0, -1, 0))
+    translation_node.add(rotation_node)
+
+    moving_dino = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT)
+    moving_dino.add(translation_node)
+
     viewer.add(moving_dino)
 
     # 4 cylinders on the ground (debuging)
