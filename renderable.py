@@ -6,6 +6,8 @@ from model_loading import load, Node, ColorMesh
 
 from transform import translate, scale
 
+from random import randint
+
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
     """ Very simple cylinder based on practical 2 load function """
@@ -103,3 +105,26 @@ class Tree(GroundedNode):
             last_leaf.add(new_leaf)
             last_leaf = new_leaf
             new_leaf = Node(transform=translate(0, 2, 0) @ scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), children=[cylinder_node])
+
+# Now that we have some trees we can do a forest
+class Forest(Node):
+    def __init__(self, ground, n_trees=10):
+        super().__init__()
+        positions = [(2*ground.min_x, 2*ground.min_z)]*(n_trees+1)
+        for i in range(n_trees):
+            # random parameters for each tree
+            leaves = randint(8, 15)
+
+            # we pick a position not to close from the other ones
+            new_pos = (2*ground.min_x, 2*ground.min_z)
+            def new_pos_valid():
+                for pos in positions:
+                    if (new_pos[0] - pos[0])**2 + (new_pos[1] - pos[1])**2 < 25: # Trees are about 5m wide
+                        return False
+                return True
+
+            while not new_pos_valid():
+                new_pos = (randint(int(ground.min_x), -int(ground.min_x)), randint(int(ground.min_z), -int(ground.min_z)))
+            # we can add the tree to the current forest
+            positions[i] = new_pos
+            self.add(Tree(ground, new_pos[0], new_pos[1], leaves))

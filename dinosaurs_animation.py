@@ -20,7 +20,7 @@ from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
 from model_loading import load, Node
 from shaders import load_shaders
 
-from renderable import Ground, GroundedNode, Tree
+from renderable import Ground, GroundedNode, Tree, Forest
 from animation import KeyFrameControlNode
 from keyboard_control import KeyboardControlNode
 from viewer7 import load_skinned
@@ -128,18 +128,20 @@ def main():
     viewer.add(ground)
 
     #viewer.add(Tree(ground))
-    viewer.add(Tree(ground, x=10))
-    viewer.add(Tree(ground, z=10, n_leaves=15))
-    viewer.add(Tree(ground, x=-10, z=-10, n_leaves=8))
+    #viewer.add(Tree(ground, x=10))
+    #viewer.add(Tree(ground, z=10, n_leaves=15))
+    #viewer.add(Tree(ground, x=-10, z=-10, n_leaves=8))
 
-    grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
-    grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
+    viewer.add(Forest(ground, n_trees=20))
+
+    #grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
+    #grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
     # grounded_dino_eat = GroundedNode(ground).add(*load_skinned("dino/Donosaurus_eat.dae"))
 
-    moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, False, 1, .15)
-    moving_dino_walk.add(grounded_dino_walk)
-    moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, True, 3, .15)
-    moving_dino_idle.add(grounded_dino_idle)
+    #moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, False, 1, .15)
+    #moving_dino_walk.add(grounded_dino_walk)
+    #moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, True, 3, .15)
+    #moving_dino_idle.add(grounded_dino_idle)
     # moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, True, 5)
     # moving_dino_eat.add(rotation_node_eat)
 
@@ -150,7 +152,7 @@ def main():
     # translation_node = Node(transform=translate(0, -1, 0))
     # translation_node.add(rotation_node)
 
-    viewer.add(moving_dino_walk, moving_dino_idle)
+    #viewer.add(moving_dino_walk, moving_dino_idle)
     # , moving_dino_eat)
 
     # start rendering loop
