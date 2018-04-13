@@ -4,7 +4,7 @@ Module for some special renderable objects (sa the ground)
 
 from model_loading import load, Node, ColorMesh
 
-from transform import translate
+from transform import translate, scale
 
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
@@ -65,8 +65,7 @@ class Ground(Node):
 
     def get_local_height(self, x, z):
         """ Returns the local height of the ground x and z are in meters """
-        # For whatever reason, we need to divide the coordinates by 2, the keyboard goes too far
-        x_pos, z_pos = int((x/2-self.min_x)*DENSITY), int((z/2-self.min_z)*DENSITY)
+        x_pos, z_pos = int((x-self.min_x)*DENSITY), int((z-self.min_z)*DENSITY)
         if x_pos >= 0 and x_pos < self.width and z_pos >= 0 and z_pos < self.height:
             return self.heights[z_pos*self.width + x_pos]
         else: return 0
@@ -86,3 +85,21 @@ class GroundedNode(Node):
         if z is None: z = self.z
         self.transform = translate(self.x, self.ground.get_local_height(x, z) + self.y_offset_with_origin, self.z)
         super().draw(projection, view, model, **_kwargs)
+
+# A tree class that can be put on the ground
+class Tree(GroundedNode):
+    def __init__(self, ground, x=0, z=0, n_leaves=10): # n_leaves is typically between 8 and 15
+        assert n_leaves > 0, "A tree should have more than 1 leaf"
+        super().__init__(ground, x, z, y_offset_with_origin=1)
+        cylinder_node = Cylinder()
+        # trunk of the tree
+        trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
+        self.add(trunk)
+        # adding the leaves
+        last_leaf = trunk
+        new_leaf = Node(transform=translate(0, 1, 0) @ scale(4, 0.2, 4), children=[cylinder_node])
+        # every leaf is created as a children of the below one
+        for i in range(n_leaves):
+            last_leaf.add(new_leaf)
+            last_leaf = new_leaf
+            new_leaf = Node(transform=translate(0, 2, 0) @ scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), children=[cylinder_node])

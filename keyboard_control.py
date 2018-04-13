@@ -20,31 +20,26 @@ class KeyboardControlNode(Node):
 
     def draw(self, projection, view, model, win=None, **param):
         assert win is not None
-        # rotation management
-        self.angle += 2 * int(glfw.get_key(win, self.key_left) == glfw.PRESS)
-        self.angle -= 2 * int(glfw.get_key(win, self.key_right) == glfw.PRESS)
-        # translation management
-        sin, cos = sincos(self.angle)
-        new_z = -cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        new_x = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        new_z += cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
-        new_x += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 
         if (glfw.get_time() > self.time and (glfw.get_key(win, self.key_forward) == glfw.PRESS)) :
             glfw.set_time(0)
         if (self.show and glfw.get_time() > self.time):
             glfw.set_time(0)
 
-        old_translation = translate(self.transform[0][3], self.transform[1][3], self.transform[2][3])
-        new_translation = translate(self.speed*normalized(vec(new_x, 0, new_z)))
-        translation = old_translation + new_translation
+        # rotation management
+        self.angle += 2 * int(glfw.get_key(win, self.key_left) == glfw.PRESS)
+        self.angle -= 2 * int(glfw.get_key(win, self.key_right) == glfw.PRESS)
+        rotation = rotate(self.axis, self.angle)
+        # translation management
+        movement_magnitude = self.speed * (int(glfw.get_key(win, self.key_forward) == glfw.PRESS) - int(glfw.get_key(win, self.key_backward) == glfw.PRESS))
+        forward_vector = -rotation @ vec(0, 0, movement_magnitude, 1) # the - and magnitude on z is here to correct the dae oriention
 
-        self.transform = translation @ rotate(self.axis, self.angle)
+        old_translation = translate(self.transform[0][3], self.transform[1][3], self.transform[2][3])
+        translation = old_translation + translate(forward_vector[0], 0, forward_vector[2])
+
+        self.transform = translation @ rotation
 
         # call Node's draw method to pursue the hierarchical tree calling
-        if self.show:
-            if (glfw.get_key(win, self.key_toggle) != glfw.PRESS):
-                super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
-        else:
-            if (glfw.get_key(win, self.key_toggle) == glfw.PRESS):
-                super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
+        if ((glfw.get_key(win, self.key_toggle) == glfw.PRESS) != self.show):
+            # For whatever reason, we need to divide the coordinates by 2, the keyboard goes too far
+            super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)

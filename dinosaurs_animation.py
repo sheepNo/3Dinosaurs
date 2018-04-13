@@ -20,7 +20,7 @@ from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
 from model_loading import load, Node
 from shaders import load_shaders
 
-from renderable import Ground, GroundedNode
+from renderable import Ground, GroundedNode, Tree
 from animation import KeyFrameControlNode
 from keyboard_control import KeyboardControlNode
 from viewer7 import load_skinned
@@ -126,6 +126,11 @@ def main():
     ground = Ground("assets/heightmap.pgm")
 
     viewer.add(ground)
+
+    #viewer.add(Tree(ground))
+    viewer.add(Tree(ground, x=10))
+    viewer.add(Tree(ground, z=10, n_leaves=15))
+    viewer.add(Tree(ground, x=-10, z=-10, n_leaves=8))
 
     grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
     grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
