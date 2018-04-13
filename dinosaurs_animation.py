@@ -99,7 +99,7 @@ class Viewer(Node):
             projection = self.trackball.projection_matrix(winsize)
 
             """ draw our scene objects """
-            self.draw(projection, view, identity(), win=self.win, color_shader=self.color_shaders['simple'])
+            self.draw(projection, view, identity(), win=self.win)
 
             # flush render commands, and swap draw buffers
             glfw.swap_buffers(self.win)

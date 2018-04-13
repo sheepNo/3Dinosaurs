@@ -15,6 +15,23 @@ import pyassimp.errors              # assimp error management + exceptions
 
 from transform import identity
 
+# -------------- 3D ressource loader -----------------------------------------
+def load(file):
+    """ load resources from file using pyassimp, return list of ColorMesh """
+    try:
+        option = pyassimp.postprocess.aiProcessPreset_TargetRealtime_MaxQuality
+        scene = pyassimp.load(file, option)
+    except pyassimp.errors.AssimpError:
+        print('ERROR: pyassimp unable to load', file)
+        return []  # error reading => return empty list
+
+    meshes = [ColorMesh([m.vertices, m.normals], m.faces) for m in scene.meshes]
+    size = sum((mesh.faces.shape[0] for mesh in scene.meshes))
+    print('Loaded %s\t(%d meshes, %d faces)' % (file, len(scene.meshes), size))
+
+    pyassimp.release(scene)
+    return meshes
+
 class VertexArray:
     """helper class to create and self destroy vertex array objects."""
     def __init__(self, attributes, index=None, usage=GL.GL_STATIC_DRAW):
@@ -72,8 +89,14 @@ class ColorMesh:
 
     def __init__(self, attributes, index=None):
         self.vertex_array = VertexArray(attributes, index)
+        self.color_shaders = None
 
-    def draw(self, projection, view, model, color_shader, **_kwargs):
+    def draw(self, projection, view, model, color_shader=None, values=None, **_kwargs):
+
+        if color_shader is None:
+            color_shader = self.color_shaders['simple']
+        else:
+            color_shader = self.color_shaders[color_shader]
 
         names = ['view', 'projection', 'model']
         loc = {n: GL.glGetUniformLocation(color_shader.glid, n) for n in names}
@@ -83,36 +106,29 @@ class ColorMesh:
         GL.glUniformMatrix4fv(loc['projection'], 1, True, projection)
         GL.glUniformMatrix4fv(loc['model'], 1, True, model)
 
+        if color_shader.uniform_loader is not None:
+            color_shader.uniform_loader(color_shader, values)
+
         # draw triangle as GL_TRIANGLE vertex array, draw array call
         self.vertex_array.draw(GL.GL_TRIANGLES)
 
-# -------------- 3D ressource loader -----------------------------------------
-def load(file):
-    """ load resources from file using pyassimp, return list of ColorMesh """
-    try:
-        option = pyassimp.postprocess.aiProcessPreset_TargetRealtime_MaxQuality
-        scene = pyassimp.load(file, option)
-    except pyassimp.errors.AssimpError:
-        print('ERROR: pyassimp unable to load', file)
-        return []  # error reading => return empty list
-
-    meshes = [ColorMesh([m.vertices, m.normals], m.faces) for m in scene.meshes]
-    size = sum((mesh.faces.shape[0] for mesh in scene.meshes))
-    print('Loaded %s\t(%d meshes, %d faces)' % (file, len(scene.meshes), size))
-
-    pyassimp.release(scene)
-    return meshes
+    def set_color_shaders(self, color_shaders):
+        self.color_shaders = color_shaders
 
 # --------------------- Node class for hierarchical modeling ------------------
 class Node:
     """ Scene graph transform and parameter broadcast node """
     def __init__(self, name='', children=(), transform=identity(), **param):
+        self.color_shaders = None
         self.transform, self.param, self.name = transform, param, name
         self.children = list(iter(children))
 
     def add(self, *drawables):
         """ Add drawables to this node, simply updating children list """
         self.children.extend(drawables)
+        if self.color_shaders is not None:
+            for child in self.children:
+                child.set_color_shaders(self.color_shaders)
         return self
 
     def draw(self, projection, view, model, **param):
@@ -122,3 +138,8 @@ class Node:
         model = model @ self.transform
         for child in self.children:
             child.draw(projection, view, model, **param)
+
+    def set_color_shaders(self, color_shaders):
+        self.color_shaders = color_shaders
+        for child in self.children:
+            child.set_color_shaders(color_shaders)
