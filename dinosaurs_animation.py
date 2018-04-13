@@ -16,14 +16,11 @@ from transform import vec, translate, scale, rotate, identity, Trackball, sincos
 from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
                        quaternion_from_euler)
 
-
 from model_loading import load, Node
-from shaders import load_shaders
+from animation import load_skinned
 
-from renderable import Ground, GroundedNode, Tree, Forest
-from animation import KeyFrameControlNode
+from renderable import Ground, GroundedNode, Forest
 from keyboard_control import KeyboardControlNode
-from viewer7 import load_skinned
 
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
@@ -78,9 +75,6 @@ class Viewer(Node):
         GL.glClearColor(0.1, 0.1, 0.1, 0.1)
         GL.glEnable(GL.GL_DEPTH_TEST)         # depth test now enabled (TP2)
         GL.glEnable(GL.GL_CULL_FACE)          # backface culling enabled (TP2)
-
-        # compile and initialize shader programs once globally
-        self.color_shaders = load_shaders()
 
         # initialize trackball
         self.trackball = GLFWTrackball(self.win)

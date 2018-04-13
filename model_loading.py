@@ -15,6 +15,8 @@ import pyassimp.errors              # assimp error management + exceptions
 
 from transform import identity
 
+from shaders import Shader, SIMPLE_COLOR_VERT, SIMPLE_COLOR_FRAG
+
 # -------------- 3D ressource loader -----------------------------------------
 def load(file):
     """ load resources from file using pyassimp, return list of ColorMesh """
@@ -89,31 +91,20 @@ class ColorMesh:
 
     def __init__(self, attributes, index=None):
         self.vertex_array = VertexArray(attributes, index)
-        self.color_shaders = None
+        self.color_shader = Shader(SIMPLE_COLOR_VERT, SIMPLE_COLOR_FRAG)
 
-    def draw(self, projection, view, model, color_shader=None, values=None, **_kwargs):
-
-        if color_shader is None:
-            color_shader = self.color_shaders['simple']
-        else:
-            color_shader = self.color_shaders[color_shader]
+    def draw(self, projection, view, model, **_kwargs):
 
         names = ['view', 'projection', 'model']
-        loc = {n: GL.glGetUniformLocation(color_shader.glid, n) for n in names}
-        GL.glUseProgram(color_shader.glid)
+        loc = {n: GL.glGetUniformLocation(self.color_shader.glid, n) for n in names}
+        GL.glUseProgram(self.color_shader.glid)
 
         GL.glUniformMatrix4fv(loc['view'], 1, True, view)
         GL.glUniformMatrix4fv(loc['projection'], 1, True, projection)
         GL.glUniformMatrix4fv(loc['model'], 1, True, model)
 
-        if color_shader.uniform_loader is not None:
-            color_shader.uniform_loader(color_shader, values)
-
         # draw triangle as GL_TRIANGLE vertex array, draw array call
         self.vertex_array.draw(GL.GL_TRIANGLES)
-
-    def set_color_shaders(self, color_shaders):
-        self.color_shaders = color_shaders
 
 # --------------------- Node class for hierarchical modeling ------------------
 class Node:
@@ -126,9 +117,6 @@ class Node:
     def add(self, *drawables):
         """ Add drawables to this node, simply updating children list """
         self.children.extend(drawables)
-        if self.color_shaders is not None:
-            for child in self.children:
-                child.set_color_shaders(self.color_shaders)
         return self
 
     def draw(self, projection, view, model, **param):
@@ -138,8 +126,3 @@ class Node:
         model = model @ self.transform
         for child in self.children:
             child.draw(projection, view, model, **param)
-
-    def set_color_shaders(self, color_shaders):
-        self.color_shaders = color_shaders
-        for child in self.children:
-            child.set_color_shaders(color_shaders)

@@ -72,7 +72,7 @@ class KeyboardControlNode(Node):
         # call Node's draw method to pursue the hierarchical tree calling
         if self.show:
             if (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS):
-                super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
+                super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
         else:
             if (glfw.get_key(win, self.key_toggle) == glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
