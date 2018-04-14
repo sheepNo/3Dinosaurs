@@ -23,9 +23,11 @@ from keyboard_control import KeyboardControlNode
 
 from texture_test import load_textured as load_textured_test
 from texture import load_textured as load_textured
+from texture import TexturedPlane
 
 from animation_texture import load_skinned as load_skinned_test
 from animation import load_skinned as load_skinned
+
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
     """ Use in Viewer for interactive viewpoint control """
@@ -123,7 +125,8 @@ def main():
 
     ground = Ground("assets/heightmap.pgm")
 
-    viewer.add(ground, *load_textured_test("TP5/bunny.obj", "TP5/bunny.png"))
+    viewer.add(ground)
+    viewer.add(GroundedNode(ground, 10, 10, y_offset_with_origin=0.5).add(*load_textured_test("TP5/bunny.obj", "TP5/bunny.png")))
 
     grounded_dino_walk = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_walk.dae", "dino/textures/Donosaurus.jpg"))
     grounded_dino_idle = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_idle2.dae", "dino/textures/Donosaurus.jpg"))
@@ -145,7 +148,7 @@ def main():
     # up_dino.add(little_dino)
 
     viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat, Forest(ground, n_trees=20))
-    # , moving_dino_eat)
+    #viewer.add(Forest(ground, n_trees=20))
 
     # start rendering loop
     viewer.run()
