@@ -17,11 +17,15 @@ from transform import (lerp, quaternion_slerp, quaternion_matrix, quaternion,
                        quaternion_from_euler)
 
 from model_loading import load, Node
-from animation import load_skinned
 
 from renderable import Ground, GroundedNode, Forest
 from keyboard_control import KeyboardControlNode
 
+from texture_test import load_textured as load_textured_test
+from texture import load_textured as load_textured
+
+from animation_texture import load_skinned as load_skinned_test
+from animation import load_skinned as load_skinned
 # ------------  Viewer class & window management ------------------------------
 class GLFWTrackball(Trackball):
     """ Use in Viewer for interactive viewpoint control """
@@ -119,11 +123,11 @@ def main():
 
     ground = Ground("assets/heightmap.pgm")
 
-    viewer.add(ground)
+    viewer.add(ground, *load_textured_test("TP5/bunny.obj", "TP5/bunny.png"))
 
-    grounded_dino_walk = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_walk.dae"))
-    grounded_dino_idle = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle2.dae"))
-    grounded_dino_eat = GroundedNode(ground).add(*load_skinned("dino/Donosaurus_eat.dae"))
+    grounded_dino_walk = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_walk.dae", "dino/textures/Donosaurus.jpg"))
+    grounded_dino_idle = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_idle2.dae", "dino/textures/Donosaurus.jpg"))
+    grounded_dino_eat = GroundedNode(ground).add(*load_skinned_test("dino/Donosaurus_eat.dae", "dino/textures/Donosaurus.jpg"))
 
     # ground_dino_eaten = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle.dae"))
 
@@ -140,8 +144,7 @@ def main():
     # up_dino = Node(transform=translate(2, 4, 0))
     # up_dino.add(little_dino)
 
-    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat)
-    # , Forest(ground, n_trees=20))
+    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat, Forest(ground, n_trees=20))
     # , moving_dino_eat)
 
     # start rendering loop

@@ -169,7 +169,7 @@ void main() {
 }"""
 # --------------load_texture ----------------------------------
 
-def load_textured(file):
+def load_textured(file, tex_file):
     """ load resources using pyassimp, return list of TexturedMeshes """
     try:
         option = pyassimp.postprocess.aiProcessPreset_TargetRealtime_MaxQuality
@@ -196,7 +196,7 @@ def load_textured(file):
     # prepare textured mesh
     meshes = []
     for mesh in scene.meshes:
-        texture = scene.materials[mesh.materialindex].texture
+        texture = tex_file
 
         # tex coords in raster order: compute 1 - y to follow OpenGL convention
         tex_uv = ((0, 1) + mesh.texturecoords[0][:, :2] * (1, -1)
