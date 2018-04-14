@@ -98,7 +98,6 @@ class Leaf(Node):
         self.color = color
         super().__init__(transform=translation @ scaling, children=[shape_node])
     def draw(self, projection, view, model, **_kwargs):
-        #super().draw(projection, view, model, color_shader="color", values=[self.color], **_kwargs)
         super().draw(projection, view, model, **_kwargs)
 
 # A tree class that can be put on the ground
