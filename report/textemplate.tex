@@ -1,0 +1,70 @@
+\documentclass[11pt]{article}
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{eurosym}
+
+% Use the postscript times font!
+\usepackage{times}
+
+\usepackage{listings}
+\usepackage{geometry}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\newcommand\underrel[2]{\mathrel{\mathop{#2}\limits_{#1}}}
+
+\geometry{hmargin=2.0cm, vmargin=2.0cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title, authors and addresses
+
+\title{\textbf{3D graphics:}\\ Dinosaurus Project}
+\date{\today}
+\author{Théo Barollet \and Etienne Bontemps \and Ning Tang}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\maketitle
+\section{Intro}
+\subsection*{How to run}
+python3 dinosaurus_animation.py
+
+\subsection*{List of controls}
+Z Q D to move around
+hold SPACE to eat
+
+\section{Animations}
+\subsection*{Outline}
+\noindent We can trigger multiple animations by preloading multiple models and drawing them (or not) depending on the keys that are pressed.\\
+The animations have different loop duration, by loop duration we mean the amount of time we wait before setting the time back to 0.\\
+It may sound fancy but it is needed: the walking animation has to have a very precise loop duration to not look weird. This requirement is not needed for the idle or eating animations since they are not continuous actions, but since these animations take longer than the walking animation, they have to have a custom loop duration.\\
+We tried opening the \texttt{.dae} file in Blender to save the walking animation backward, however the outcome is not very promissing (see \texttt{dinosaurus\_moon\_moon.dae} obtained by just opening and saving the file as is with Blender.). As a result, we disabled the possibilty to go backward.\\
+
+\subsection*{Known issues}
+\noindent When models are drawn on keypress for the ``first time'' i.e. not when the key is held pressed, their previous position (where they were last drawn) blinks.\\
+When the eating dinosaurus is drawn for the first time, the animation does not start at the beginning. It is not really an issue but more like a technical limitation of the way it is implemented.\\
+Instead, using the space key as a toggle (once press the enable the animation, another one to disable it) would fix this issue.
+
+\subsection*{Code}
+TBA
+
+\section{Texturing}
+\noindent The \texttt{.dae} files have hardcoded absolute path to their texture, so we had to ignore this and load them manually. So we updated the texture classes. (see \texttt{texture\_text.py})
+
+\end{document}

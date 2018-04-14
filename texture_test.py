@@ -201,7 +201,7 @@ def load_textured(file, tex_file):
         # tex coords in raster order: compute 1 - y to follow OpenGL convention
         tex_uv = ((0, 1) + mesh.texturecoords[0][:, :2] * (1, -1)
                   if mesh.texturecoords.size else None)
-
+        print('tex_uv', tex_uv)
         # create the textured mesh object from texture, attributes, and indices
         meshes.append(TexturedMesh(Texture(texture), [mesh.vertices, tex_uv], mesh.faces))
 

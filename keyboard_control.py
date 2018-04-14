@@ -53,8 +53,17 @@ class KeyboardControlNode(Node):
             if (self.show and (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS)):
                 # resets idle animation
                 glfw.set_time(0)
-            if (self.interact):
+            if (self.interact and glfw.get_key(win, self.key_forward) != glfw.PRESS):
                 glfw.set_time(0)
+
+        if self.interact:
+            if self.first_time and glfw.get_key(win, self.key_toggle) == glfw.PRESS:
+                glfw.set_time(0)
+                self.first_time = False
+            if not(self.first_time) and glfw.get_key(win, self.key_toggle) != glfw.PRESS:
+                self.first_time = True
+
+
         # elif self.first_time and self.interact and glfw.get_key(win, self.key_toggle) != glfw.PRESS:
         #     # make sure the dino eating animation starts when toggle is pressed
         #     glfw.set_time(0)
