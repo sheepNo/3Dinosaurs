@@ -22,15 +22,6 @@ class KeyboardControlNode(Node):
 
     def draw(self, projection, view, model, win=None, **param):
         assert win is not None
-        # rotation management
-        # self.angle += 2 * int(glfw.get_key(win, self.key_left) == glfw.PRESS)
-        # self.angle -= 2 * int(glfw.get_key(win, self.key_right) == glfw.PRESS)
-        # translation management
-        sin, cos = sincos(self.angle)
-        # new_z = -cos * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        # new_x = -sin * int(glfw.get_key(win, self.key_forward) == glfw.PRESS)
-        # new_z += cos * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
-        # new_x += sin * int(glfw.get_key(win, self.key_backward) == glfw.PRESS)
 
         # rotation management
         self.angle += 2 * int(glfw.get_key(win, self.key_left) == glfw.PRESS)
@@ -47,7 +38,7 @@ class KeyboardControlNode(Node):
         goaly = 0
 
         if glfw.get_time() > self.time:
-            if (glfw.get_key(win, self.key_forward) == glfw.PRESS):
+            if (glfw.get_key(win, self.key_forward) == glfw.PRESS or glfw.get_key(win, self.key_forward) == PRESS):
                 # resets walking animation when key is held
                 glfw.set_time(0)
             if (self.show and (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS)):

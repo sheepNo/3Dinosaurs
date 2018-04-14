@@ -3,12 +3,16 @@ Module for some special renderable objects (sa the ground, trees, etc)
 Every created renderable object should be associated with a shader and possibly a function to load needed uniforms
 """
 
+import OpenGL.GL as GL              # standard Python OpenGL wrapper
+
 from model_loading import load, load_monocolor_vertex_array, Node, ColorMesh, MonoColorMesh
 from shaders import Shader, UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG
 
 from transform import translate, scale
 
 from random import randint
+
+from texture_test import Texture, TexturedMesh
 
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
@@ -44,11 +48,12 @@ class Ground(Node):
             band_size = 5*DENSITY # bands of colors are 5m long
 
             vertex_positions = [(0, 0, 0)]*N
-            vertex_colors = [(0, 0, 0)]*N
+            vertex_uv = [(0, 0)]*N
+            mina, maxa = 2, 0
             for h in range(height):
                 for w in range(width):
                     vertex_positions[h*width + w] = (min_x + w/DENSITY, ord(pgmf.read(1))/(255/MAX_HEIGHT), min_z + h/DENSITY)
-                    vertex_colors[h*width + w] = ((w%band_size)/band_size, (h%band_size)/band_size, 0)
+                    vertex_uv[h*width + w] = ((w%band_size)/(band_size-1), (h%band_size)/(band_size-1))
 
         # index
         indexes = [0]*(6*(width)*(height))
@@ -70,8 +75,8 @@ class Ground(Node):
         self.min_z = min_z
 
         super().__init__(name="Ground")
-        
-        self.add(ColorMesh([vertex_positions, vertex_colors], indexes))
+
+        self.add(TexturedMesh(Texture("assets/grass2.png"), [vertex_positions, vertex_uv], indexes))
 
     def get_local_height(self, x, z):
         """ Returns the local height of the ground x and z are in meters """
