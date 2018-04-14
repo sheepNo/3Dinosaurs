@@ -38,7 +38,7 @@ class KeyboardControlNode(Node):
         goaly = 0
 
         if glfw.get_time() > self.time:
-            if (glfw.get_key(win, self.key_forward) == glfw.PRESS or glfw.get_key(win, self.key_forward) == PRESS):
+            if (glfw.get_key(win, self.key_forward) == glfw.PRESS):
                 # resets walking animation when key is held
                 glfw.set_time(0)
             if (self.show and (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS)):
@@ -74,8 +74,11 @@ class KeyboardControlNode(Node):
             if (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
         else:
-            if (glfw.get_key(win, self.key_toggle) == glfw.PRESS):
+            if (not(self.interact) and glfw.get_key(win, self.key_toggle) == glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
+            elif (self.interact and glfw.get_key(win, self.key_toggle) == glfw.PRESS and glfw.get_key(win, self.key_forward) != glfw.PRESS):
+                super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
+
             # else:
             #     if (self.interact):
             #         super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
