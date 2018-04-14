@@ -10,9 +10,11 @@ from shaders import Shader, UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG
 
 from transform import translate, scale
 
-from random import randint
+from random import randint, random
 
 from texture_test import Texture, TexturedMesh
+
+from particles import FireEmiter
 
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
@@ -115,13 +117,15 @@ class Leaf(Node):
 # A tree class that can be put on the ground
 class Tree(GroundedNode):
 
-    def __init__(self, ground, shape_vertex_array, shader, x=0, z=0, n_leaves=10): # n_leaves is typically between 8 and 15
+    def __init__(self, ground, shape_vertex_array, shader, x=0, z=0, n_leaves=10, fire=False): # n_leaves is typically between 8 and 15
         # we can provide a cylinder node if we don't want to reload one
         assert n_leaves > 0, "A tree should have more than 1 leaf"
         super().__init__(ground, x, z, y_offset_with_origin=1)
         # trunk of the tree
         #trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
         trunk = Leaf(translate(0, 0, 0), scale(0.5, 1, 0.5), shape_vertex_array, shader, (0.8, 0.3, 0.1, 1))
+        if fire: #optionaly set the tree on fire
+            self.add(FireEmiter(height=n_leaves))
         self.add(trunk)
         # adding the leaves
         last_leaf = trunk
@@ -136,7 +140,7 @@ class Tree(GroundedNode):
 
 # Now that we have some trees we can do a forest
 class Forest(Node):
-    def __init__(self, ground, n_trees=10):
+    def __init__(self, ground, n_trees=10, fire=False):
         super().__init__()
         positions = [(2*ground.min_x, 2*ground.min_z)]*(n_trees+1)
         shape_vertex_array = load_monocolor_vertex_array('assets/cylinder.obj')[0]  # just load the cylinder from file
@@ -157,4 +161,6 @@ class Forest(Node):
                 new_pos = (randint(int(ground.min_x), -int(ground.min_x)), randint(int(ground.min_z), -int(ground.min_z)))
             # we can add the tree to the current forest
             positions[i] = new_pos
-            self.add(Tree(ground, shape_vertex_array, shader, new_pos[0], new_pos[1], leaves))
+            if fire:
+                on_fire = random() < 0.2
+            self.add(Tree(ground, shape_vertex_array, shader, new_pos[0], new_pos[1], leaves, on_fire))
