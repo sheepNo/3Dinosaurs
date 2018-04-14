@@ -3,7 +3,8 @@ Module for some special renderable objects (sa the ground, trees, etc)
 Every created renderable object should be associated with a shader and possibly a function to load needed uniforms
 """
 
-from model_loading import load, Node, ColorMesh
+from model_loading import load, load_monocolor_vertex_array, Node, ColorMesh, MonoColorMesh
+from shaders import Shader, UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG
 
 from transform import translate, scale
 
@@ -12,9 +13,15 @@ from random import randint
 # A cylinder class mainly for debuging and testing
 class Cylinder(Node):
     """ Very simple cylinder based on practical 2 load function """
-    def __init__(self, color=None):
+    def __init__(self):
         super().__init__()
         self.add(*load('assets/cylinder.obj'))  # just load the cylinder from file
+
+# A colored cylinder for the parts of the tree
+class ColoredCylinder(Node):
+    def __init__(self, vertex_array, shader, color):
+        super().__init__()
+        self.add(MonoColorMesh(color, vertex_array, shader))
 
 # A ground generated from a pgm heightmap and rendered with usual triangle mode
 # The heightmap should be of type P5 (meaning greyscale binary)
@@ -94,42 +101,41 @@ class GroundedNode(Node):
 
 # A leaf to be part of a tree
 class Leaf(Node):
-    def __init__(self, translation, scaling, shape_node, color):
+    def __init__(self, translation, scaling, shape_node, shader, color):
         self.color = color
-        super().__init__(transform=translation @ scaling, children=[shape_node])
+        super().__init__(transform=translation @ scaling, children=[ColoredCylinder(shape_node, shader, color)])
     def draw(self, projection, view, model, **_kwargs):
         super().draw(projection, view, model, **_kwargs)
 
 # A tree class that can be put on the ground
 class Tree(GroundedNode):
 
-    def __init__(self, ground, x=0, z=0, n_leaves=10, cylinder_node=None): # n_leaves is typically between 8 and 15
+    def __init__(self, ground, shape_vertex_array, shader, x=0, z=0, n_leaves=10): # n_leaves is typically between 8 and 15
         # we can provide a cylinder node if we don't want to reload one
         assert n_leaves > 0, "A tree should have more than 1 leaf"
         super().__init__(ground, x, z, y_offset_with_origin=1)
-        if cylinder_node is None:
-            cylinder_node = Cylinder()
         # trunk of the tree
         #trunk = Node(transform=scale(0.5, 1, 0.5), children=[cylinder_node])
-        trunk = Leaf(translate(0, 0, 0), scale(0.5, 1, 0.5), cylinder_node, (255, 0, 0, 1))
+        trunk = Leaf(translate(0, 0, 0), scale(0.5, 1, 0.5), shape_vertex_array, shader, (0.8, 0.3, 0.1, 1))
         self.add(trunk)
         # adding the leaves
         last_leaf = trunk
         #new_leaf = Node(transform=translate(0, 1, 0) @ scale(4, 0.2, 4), children=[cylinder_node])
-        new_leaf = Leaf(translate(0, 1, 0), scale(4, 0.2, 4), cylinder_node, (0, 255, 0, 1))
+        new_leaf = Leaf(translate(0, 1, 0), scale(4, 0.2, 4), shape_vertex_array, shader, (0.2, 0.6, 0.2, 1))
         # every leaf is created as a children of the below one
         for i in range(n_leaves):
             last_leaf.add(new_leaf)
             last_leaf = new_leaf
             #new_leaf = Node(transform=translate(0, 2, 0) @ scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), children=[cylinder_node])
-            new_leaf = Leaf(translate(0, 2, 0), scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), cylinder_node, (0, 0, 255, 1))
+            new_leaf = Leaf(translate(0, 2, 0), scale((n_leaves-2)/n_leaves, 1, (n_leaves-2)/n_leaves), shape_vertex_array, shader, (0.2+i/100, 0.6+2*i/100, 0.2+i/100, 1))
 
 # Now that we have some trees we can do a forest
 class Forest(Node):
     def __init__(self, ground, n_trees=10):
         super().__init__()
-        cylinder_node = Cylinder()
         positions = [(2*ground.min_x, 2*ground.min_z)]*(n_trees+1)
+        shape_vertex_array = load_monocolor_vertex_array('assets/cylinder.obj')[0]  # just load the cylinder from file
+        shader = Shader(UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG)
         for i in range(n_trees):
             # random parameters for each tree
             leaves = randint(8, 15)
@@ -146,4 +152,4 @@ class Forest(Node):
                 new_pos = (randint(int(ground.min_x), -int(ground.min_x)), randint(int(ground.min_z), -int(ground.min_z)))
             # we can add the tree to the current forest
             positions[i] = new_pos
-            self.add(Tree(ground, new_pos[0], new_pos[1], leaves, cylinder_node))
+            self.add(Tree(ground, shape_vertex_array, shader, new_pos[0], new_pos[1], leaves))

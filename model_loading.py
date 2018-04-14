@@ -15,7 +15,7 @@ import pyassimp.errors              # assimp error management + exceptions
 
 from transform import identity
 
-from shaders import Shader, SIMPLE_COLOR_VERT, SIMPLE_COLOR_FRAG
+from shaders import Shader, SIMPLE_COLOR_VERT, SIMPLE_COLOR_FRAG, UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG
 
 # -------------- 3D ressource loader -----------------------------------------
 def load(file):
@@ -28,6 +28,22 @@ def load(file):
         return []  # error reading => return empty list
 
     meshes = [ColorMesh([m.vertices, m.normals], m.faces) for m in scene.meshes]
+    size = sum((mesh.faces.shape[0] for mesh in scene.meshes))
+    print('Loaded %s\t(%d meshes, %d faces)' % (file, len(scene.meshes), size))
+
+    pyassimp.release(scene)
+    return meshes
+
+def load_monocolor_vertex_array(file):
+    """ load resources from file using pyassimp, return list of MonoColorMesh """
+    try:
+        option = pyassimp.postprocess.aiProcessPreset_TargetRealtime_MaxQuality
+        scene = pyassimp.load(file, option)
+    except pyassimp.errors.AssimpError:
+        print('ERROR: pyassimp unable to load', file)
+        return []  # error reading => return empty list
+
+    meshes = [VertexArray([m.vertices], m.faces) for m in scene.meshes]
     size = sum((mesh.faces.shape[0] for mesh in scene.meshes))
     print('Loaded %s\t(%d meshes, %d faces)' % (file, len(scene.meshes), size))
 
@@ -102,6 +118,30 @@ class ColorMesh:
         GL.glUniformMatrix4fv(loc['view'], 1, True, view)
         GL.glUniformMatrix4fv(loc['projection'], 1, True, projection)
         GL.glUniformMatrix4fv(loc['model'], 1, True, model)
+
+        # draw triangle as GL_TRIANGLE vertex array, draw array call
+        self.vertex_array.draw(GL.GL_TRIANGLES)
+
+# A ColorMesh with only one color
+# inherite from ColorMesh does not really worth it :(
+class MonoColorMesh:
+
+    def __init__(self, color, vertex_array, shader=None):
+        self.vertex_array = vertex_array
+        if shader is not None:
+            self.color_shader = Shader(UNIFORM_COLOR_VERT, UNIFORM_COLOR_FRAG)
+        self.color = color
+
+    def draw(self, projection, view, model, **_kwargs):
+
+        names = ['view', 'projection', 'model', 'color']
+        loc = {n: GL.glGetUniformLocation(self.color_shader.glid, n) for n in names}
+        GL.glUseProgram(self.color_shader.glid)
+
+        GL.glUniformMatrix4fv(loc['view'], 1, True, view)
+        GL.glUniformMatrix4fv(loc['projection'], 1, True, projection)
+        GL.glUniformMatrix4fv(loc['model'], 1, True, model)
+        GL.glUniform4f(loc['color'], *self.color)
 
         # draw triangle as GL_TRIANGLE vertex array, draw array call
         self.vertex_array.draw(GL.GL_TRIANGLES)
