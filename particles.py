@@ -33,7 +33,7 @@ class Particle(MonoColorMesh):
         if self.life > 0:
             super().draw(projection, view, model @ self.model, **_kwargs)
     def update(self, delta):
-        if self.life > 0:
+        if self.life > 0 and self.life <= self.total_life:
             self.life -= delta
 
             life_ratio = self.life/self.total_life # life_ratio goes from 1 to 0
