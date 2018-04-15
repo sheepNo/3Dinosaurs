@@ -35,16 +35,16 @@ class Particle(MonoColorMesh):
     def update(self, delta):
         if self.life > 0:
             self.life -= delta
-            
+
             life_ratio = self.life/self.total_life # life_ratio goes from 1 to 0
             self.color = (1, life_ratio, 0, 1)
             self.model = scale(0.5 + 0.5*life_ratio) @ translate(self.x_offset + self.width*life_ratio*sin(self.height*life_ratio), self.height*(1-life_ratio), self.z_offset + self.width*life_ratio*sin(self.height*life_ratio))
         else:
             self.life = self.total_life
-    
+
 
 class FireEmiter(Node):
-    def __init__(self, max_particles=100, width=1, height=15, density=10): # density is the ratio width/particle_size
+    def __init__(self, max_particles=50, width=1, height=15, density=10): # density is the ratio width/particle_size
         super().__init__()
 
         self.max_particles = max_particles

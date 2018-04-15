@@ -131,28 +131,23 @@ def main():
 
     viewer.add(GroundedNode(ground, 10, 10, y_offset_with_origin=0.5).add(*load_textured_test("TP5/bunny.obj", "TP5/bunny.png")))
 
-    #grounded_dino_walk = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_walk.dae", "dino/textures/Donosaurus.jpg"))
-    #grounded_dino_idle = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_idle2.dae", "dino/textures/Donosaurus.jpg"))
-    #grounded_dino_eat = GroundedNode(ground).add(*load_skinned_test("dino/Donosaurus_eat.dae", "dino/textures/Donosaurus.jpg"))
+    grounded_dino_walk = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_walk.dae", "dino/textures/Donosaurus.jpg"))
+    grounded_dino_idle = GroundedNode(ground).add(*load_skinned_test("dino/Dinosaurus_idle2.dae", "dino/textures/Donosaurus.jpg"))
+    grounded_dino_eat = GroundedNode(ground).add(*load_skinned_test("dino/Donosaurus_eat.dae", "dino/textures/Donosaurus.jpg"))
 
-    # ground_dino_eaten = GroundedNode(ground).add(*load_skinned("dino/Dinosaurus_idle.dae"))
+    movement_speed = .22
 
-    #moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, show=False, time=1, speed=.22)
-    #moving_dino_walk.add(grounded_dino_walk)
-    #moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, glfw.KEY_SPACE, time=3, speed=.22)
-    #moving_dino_idle.add(grounded_dino_idle)
-    #moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, show=False, interact=True, time=5, speed=.22)
-    #moving_dino_eat.add(grounded_dino_eat)
+    moving_dino_walk = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, show=False, time=1, speed=movement_speed)
+    moving_dino_walk.add(grounded_dino_walk)
+    moving_dino_idle = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_UP, glfw.KEY_SPACE, time=3, speed=movement_speed)
+    moving_dino_idle.add(grounded_dino_idle)
+    moving_dino_eat = KeyboardControlNode(glfw.KEY_UP, glfw.KEY_DOWN, glfw.KEY_LEFT, glfw.KEY_RIGHT, glfw.KEY_SPACE, show=False, interact=True, time=5, speed=movement_speed)
+    moving_dino_eat.add(grounded_dino_eat)
 
-    # little_dino = Node(transform=scale(0.3,0.3,0.3))
-    # little_dino.add(ground_dino_eaten)
-
-    # up_dino = Node(transform=translate(2, 4, 0))
-    # up_dino.add(little_dino)
-
-    #viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat, Forest(ground, n_trees=20))
+    viewer.add(moving_dino_walk, moving_dino_idle, moving_dino_eat)
     viewer.add(Forest(ground, n_trees=20, fire=True)) # trees have a probability of 0.2 to be on fire
 
+    print("Ready!\n Press W, A or D to move around\n Press SPACE to eat some grass (or a rabbit)\n")
     # start rendering loop
     viewer.run()
 

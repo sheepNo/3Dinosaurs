@@ -42,33 +42,71 @@
 
 \maketitle
 \section{Intro}
+\noindent This is a very simple "game" where
 \subsection*{How to run}
-python3 dinosaurus\_animation.py
+    \texttt{python3 dinosaurus\_animation.py}
 
 \subsection*{List of controls}
-Z Q D to move around
-hold SPACE to eat
+\begin{itemize}
+    \item W, A and D to move around. We disabled S (backward) because we don't have any animation for this motion.
+    \item hold SPACE to play the eating animation.
+\end{itemize}
 
 \section{Animations}
-\subsection*{Outline}
 \noindent We can trigger multiple animations by preloading multiple models and drawing them (or not) depending on the keys that are pressed.\\
 The animations have different loop duration, by loop duration we mean the amount of time we wait before setting the time back to 0.\\
-It may sound fancy but it is needed: the walking animation has to have a very precise loop duration to not look weird. This requirement is not needed for the idle or eating animations since they are not continuous actions, but since these animations take longer than the walking animation, they have to have a custom loop duration.\\
+It may sound fancy but it is needed : the walking animation has to have a very precise loop duration to not look choppy.\\
+This is not a requirement for the idle or eating animations since they are not continuous actions, however these animations take longer than the walking animation, so they have to have a custom loop duration.\\
 We tried opening the \texttt{.dae} file in Blender to save the walking animation backward, however the outcome is not very promissing (see \texttt{dinosaurus\_moon\_moon.dae} obtained by just opening and saving the file as is with Blender.). As a result, we disabled the possibilty to go backward.\\
 
-\subsection*{Known issues}
-\noindent When models are drawn on keypress for the ``first time'' i.e. not when the key is held pressed, their previous position (where they were last drawn) blinks.\\
-When the eating dinosaurus is drawn for the first time, the animation does not start at the beginning. It is not really an issue but more like a technical limitation of the way it is implemented.\\
-Instead, using the space key as a toggle (once press the enable the animation, another one to disable it) would fix this issue.
+\subsection*{Improving keyboard control}
+\noindent We added a few new arguments to the \texttt{KeyboardControlNode} class:
+\begin{itemize}
+    \item show (True for idle animation)
+    \item time (loop duration)
+    \item interact (True for the eating animation)
+    \item first\_time (This one is interesting)
+\end{itemize}
 
-\subsection*{Code}
-TBA
+\subsection*{Synchronizing the eating animation}
+\noindent At first, when we pressed a key triggering an animation, this animation was likely to not be played from the start. This is not really a problem for the idle or walking animation.\\
+But it looked completely wrong for the eating animation, so we looked for a way to make this animation start from the beginning as soon a we pressed the SPACE key.
+
+\begin{verbatim}
+if self.interact:
+    if self.first_time
+        and glfw.get\_key(win, self.key\_toggle) == glfw.PRESS:
+        glfw.set\_time(0)
+        self.first\_time = False
+    if not(self.first_time) and
+        glfw.get\_key(win, self.key\_toggle) != glfw.PRESS:
+        self.first\_time = True
+\end{verbatim}
+
+\subsection*{Note}
+\noindent The animation speed has been calibrated on a small laptop. The dinosaur may appear to be sliding on the ground on your computer.\\
+You can adjust the speed of the dinosaur by editing \texttt{movement\_speed} in \texttt{main}.
 
 \section{Texturing}
-\noindent The \texttt{.dae} files have hardcoded absolute path to their texture, so we had to ignore this and load them manually. So we updated the texture classes. (see \texttt{texture\_text.py})
+\noindent To texture the dinoseaurus, we have to merge \texttt{load\_skinned} with \texttt{load\_textured}, \texttt{TexturedMesh} with \texttt{skinningMesh}, \texttt{SKINNING\_VERT} with \texttt{TEXTURE\_VERT}. We add another attribute, \texttt{tex\_uv}, to \texttt{vertex\_array}, in order to get the color for texture file.Compare to simple \texttt{TexturedMeshes}, \texttt{skinning\_texture\_meshes} don't need to pass model to the shader, instead, we use \texttt{bone\_matrix} and \texttt{skinning\_weights} to compute the model position.\\
+The \texttt{.dae} files have hardcoded absolute path to their texture, so we had to ignore this and load them manually, directly set texture = filename and we updated the texture classes. (see \texttt{texture\_text.py})
 
 \section{Particles}
-\noindent For fire, we used a "particles system". Due to lack of time to dive into the documentation we used technics we already know and that are really less efficient. Most of today's GPUs allow to draw the same mesh more efficiently with instancing in OpenGL for example, we didn't manage to make this work so with just share a cube mesh between all particles in a particle system and we draw each of them by passing the 3 4*4 matrices MVP to each vertex buffer of a particle (wich is not really efficient). We simulate the behaviour of every particle during its lifetime and when the particle dies we respawn it so that we don't have to manage particle number in the system we can use a simple array containing all the particles.
-\noindent Our main issue is that for the moment we are drawing particles one by one so this not really particles system (or at least a really inefficient one)
+\noindent For fire, we used a "particles system". Due to lack of time to dive into the documentation we used technics we already know and that are really less efficient. Most of today's GPUs allow to draw the same mesh more efficiently with instancing in OpenGL for example, we didn't manage to make this work so with just share a cube mesh between all particles in a particle system and we draw each of them by passing the 3 4*4 matrices MVP to each vertex buffer of a particle (wich is not really efficient). We simulate the behaviour of every particle during its lifetime and when the particle dies we respawn it so that we don't have to manage particle number in the system we can use a simple array containing all the particles.\\
+Our main issue is that for the moment we are drawing particles one by one so this not really particles system (or at least a really inefficient one)
+
+
+\section*{Known issues}
+\begin{itemize}
+    \item When models are drawn on keypress for the ``first time'' i.e. not when the key is held pressed, their previous position (where they were last drawn) blinks. This is caused by the double buffering of openGL.
+    \item We can't take advantage of the included path to texture of \texttt{.dae} files
+    \item The particles can not show up on small laptops without GPU. This can be fixed by reducing the number of particle.
+    \item We don't have any collision system, so:
+    \begin{itemize}
+        \item The dinosaur can go out of the map.
+        \item The dinosaur can go through trees.
+    \end{itemize}
+    \item (The rabbit does not disappear when we play the eating animation close to it.)
+\end{itemize}
 
 \end{document}

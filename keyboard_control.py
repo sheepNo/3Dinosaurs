@@ -37,6 +37,7 @@ class KeyboardControlNode(Node):
         goalx = 0
         goaly = 0
 
+        # a lot of booleans to test if we need to set the time to zero
         if glfw.get_time() > self.time:
             if (glfw.get_key(win, self.key_forward) == glfw.PRESS):
                 # resets walking animation when key is held
@@ -47,6 +48,7 @@ class KeyboardControlNode(Node):
             if (self.interact and glfw.get_key(win, self.key_forward) != glfw.PRESS):
                 glfw.set_time(0)
 
+        # this part makes sure the eating animation starts from the beginning everytime we press the spacebar.
         if self.interact:
             if self.first_time and glfw.get_key(win, self.key_toggle) == glfw.PRESS:
                 glfw.set_time(0)
@@ -54,22 +56,10 @@ class KeyboardControlNode(Node):
             if not(self.first_time) and glfw.get_key(win, self.key_toggle) != glfw.PRESS:
                 self.first_time = True
 
-
-        # elif self.first_time and self.interact and glfw.get_key(win, self.key_toggle) != glfw.PRESS:
-        #     # make sure the dino eating animation starts when toggle is pressed
-        #     glfw.set_time(0)
-        #     self.first_time = False
-        #
-        # if self.interact and (glfw.get_key(win, self.key_forward) == glfw.RELEASE or glfw.get_key(win, self.key_toggle) == glfw.RELEASE or glfw.get_key(win, self.key_toggle2) == glfw.RELEASE):
-        #     self.first_time = True
-
-
-
-        # self.transform = translation @ rotate(self.axis, self.angle)
         self.transform = translation @ rotation
 
-
         # call Node's draw method to pursue the hierarchical tree calling
+        # a lot of boolean conditions to draw or not the different dinosaurs
         if self.show:
             if (glfw.get_key(win, self.key_toggle) != glfw.PRESS and glfw.get_key(win, self.key_toggle2) != glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
@@ -78,7 +68,3 @@ class KeyboardControlNode(Node):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
             elif (self.interact and glfw.get_key(win, self.key_toggle) == glfw.PRESS and glfw.get_key(win, self.key_forward) != glfw.PRESS):
                 super().draw(projection, view, model, win=win, x=translation[0][3]/2, z=translation[2][3]/2, **param)
-
-            # else:
-            #     if (self.interact):
-            #         super().draw(projection, view, model, win=win, x=translation[0][3], z=translation[2][3], **param)
