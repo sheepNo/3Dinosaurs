@@ -67,4 +67,8 @@ TBA
 \section{Texturing}
 \noindent The \texttt{.dae} files have hardcoded absolute path to their texture, so we had to ignore this and load them manually. So we updated the texture classes. (see \texttt{texture\_text.py})
 
+\section{Particles}
+\noindent For fire, we used a "particles system". Due to lack of time to dive into the documentation we used technics we already know and that are really less efficient. Most of today's GPUs allow to draw the same mesh more efficiently with instancing in OpenGL for example, we didn't manage to make this work so with just share a cube mesh between all particles in a particle system and we draw each of them by passing the 3 4*4 matrices MVP to each vertex buffer of a particle (wich is not really efficient). We simulate the behaviour of every particle during its lifetime and when the particle dies we respawn it so that we don't have to manage particle number in the system we can use a simple array containing all the particles.
+\noindent Our main issue is that for the moment we are drawing particles one by one so this not really particles system (or at least a really inefficient one)
+
 \end{document}
